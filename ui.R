@@ -115,17 +115,26 @@ shinyUI(navbarPage(theme = "bootstrap.min.css",
                               column(5,
                                      fileInput('file.rdf', 'Choose File(s) in RDF format',multiple=FALSE, accept=c('txt','rdf')),
                                      uiOutput("print_name_rdf"),
-                                     uiOutput("print_content_rdf"),
+                                     uiOutput("zotero_slider"),
+                                     uiOutput("choose_kwic_num"),
+                                    # uiOutput("print_content_rdf"),
                                      tags$br()
                                      
                               ),
                               column(6,
                                      tags$h4("Extract Terms"),
-                                      uiOutput("zotero_term"),
-                                    # uiOutput("choose_kwic_num"),
+                                     helpText("Your query must include two query terms and AND / OR condition."),
                                      tags$br(),
-                                     uiOutput("zotero_slider"),
-                                     tags$hr()
+                                     helpText("For example: ",tags$b("european AND law")),
+                                     tags$br(),
+                                      uiOutput("zotero_term")
+                                    # uiOutput("choose_kwic_num"),
+                                    # tags$br(),
+                                   # uiOutput("zotero_condition"),
+                                    #tags$br(),
+                                   # uiOutput("zotero_term2"),
+                                     #uiOutput("zotero_slider"),
+                                   #  tags$hr()
                                     # textInput("pattern1", label = "term1", value = NA),
                                      #  uiOutput("pattern2")
                                    #  textInput("pattern2", label = "term2", value = NA)

@@ -8,7 +8,6 @@
  xmlns:foaf="http://xmlns.com/foaf/0.1/"
  xmlns:link="http://purl.org/rss/1.0/modules/link/"
  xmlns:vcard="http://nwalsh.com/rdf/vCard#">
-    <bib:Article rdf:about="http://www.tandfonline.com/doi/abs/10.
    
  <bib:Article rdf:about="http://library3.webster.edu/login?url=http://search.ebscohost.com/login.aspx?direct=true&amp;db=a9h&amp;AN=111795867&amp;site=ehost-live">
         <z:itemType>journalArticle</z:itemType>

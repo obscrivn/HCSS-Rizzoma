@@ -20,6 +20,37 @@
 # mydata <- extractZotero(dir.list,query,query2,len, path_to_rdf)
 # mydata$titles
 
+zotero_rdf <- function(x) {
+  require(XML)
+  xml = xmlTreeParse(x,useInternalNodes=TRUE)
+  k=1
+  articles <- list()
+  nodes = getNodeSet(xml, "//bib:Article")
+  for (i in 1:length(nodes)) {
+    node <- nodes[[i]]
+    doc <- xmlToList(node)
+    title <-   doc$title
+    abstract <- doc$abstract
+    date <- doc$date
+    surname <- doc$authors$Seq$li$Person$surname
+    firstname <- doc$authors$Seq$li$Person$givenname
+    link <- doc$link@.Data
+    
+    attachments <- getNodeSet(xml, "//z:Attachment") 
+    attachment <- attachments[[i]]
+    doc2 <- xmlToList(attachment)
+    
+    ## Test for file item # between article and  attachement
+    if (link %in% doc2$.attrs[[1]]==TRUE){
+      type <-  doc2$type # test pdf
+      path <-   doc2$resource@.Data  # file path
+      if (type %in% "application/pdf"==TRUE) {
+        article <- c(title, abstract,date,surname, firstname,link,type,path)
+        articles[[k]] <- article
+        k=k+1
+      }}}
+  return(articles)
+}
   zotero <- function(x) {
      uris.name <- x
 # #Get all the lines of interest in the file
@@ -33,13 +64,12 @@ zot.line.parser <- function(z){
   #Seems safe enough, but just to be safe we take the first and last quote mark
   #This avoids issues with quotes in a title/file name.
   require(stringr)
-  
+  require(tools)
   first <- 1
   last <- dim(str_locate_all(z,'"')[[1]])[1]
   
   start <- str_locate_all(z,'"')[[1]][first] + 1
   stop <- str_locate_all(z[1],'"')[[1]][last] -1
-  
   substr(z, start, stop)
 }
 
@@ -68,72 +98,84 @@ zoteroMeta <- function(x) {
   return(info)
 } 
 
-extractPdfZotero <- function(list.rdf){
-  list.rdf <- list.rdf
-  num <- length(list.rdf)
+#extractPdfZotero <- function(list.rdf,zot.pdf){
+#### extract pdf files from a list of rdf articles
+extractPdfZotero <- function(zot.rdf) {
+ # list.rdf <- list.rdf
+ # num <- length(list.rdf)
+  require(tm)
+ num <- length(zot.rdf) # list of rdf articles with sublist of 5 title, abstract,date,surname, firstname,link,type,path
   titles <-vector()
-  authors <-vector()
+authors <-vector()
   datetimes <- vector()
+  abstracts <- vector()
   names <- vector()
   # cont <- rep("",num)
   text.extract <- list()
   for (i in 1:num) {
-    uris.name <- as.character(paste0(list.rdf[i]))
+    lists <- zot.rdf[[i]]
+   # uris.name <- as.character(paste0(list.rdf[i]))
+    uris.name <- lists[8]
     # if (nchar(uris.name)<100) {
     tempPDF <- readPDF(control = list(info="-f",text = "-layout"))(elem = list(uri = uris.name),
                                                                    language="en",id="id1")
     read.file <- tempPDF$content
-    id <- tempPDF$meta$id
-    title <- tempPDF$meta$id
+  #  id <- tempPDF$meta$id
+  #  title <- tempPDF$meta$id
     texts <- enc2utf8(read.file)
     text.collapse <- paste(texts,collapse=" ")
     text.hyphen <- gsub("-\\s+","",text.collapse)
     text.space <- gsub("\\s\\s+"," ",text.hyphen)
-    split_title <- unlist(strsplit(id," - "))
-    if (!is.null(tempPDF$meta$datetimestamp)) {
+  #  split_title <- unlist(strsplit(id," - "))
+   # if (!is.null(tempPDF$meta$datetimestamp)) {
      # title <- tempPDF$meta$heading
      # author <- tempPDF$meta$author # Alan Ritter ; Colin Cherry ; Bill Dolan
       #id <-tempPDF$meta$id
-      des <- tempPDF$meta$datetimestamp
-      y <- strsplit(as.character(des), "-")
-      datetime <- y[[1]][1]
+    #  des <- tempPDF$meta$datetimestamp
+   #   y <- strsplit(as.character(des), "-")
+   #   datetime <- y[[1]][1]
      # name <- tempPDF$meta$id
-    }
-    if (!is.null(tempPDF$meta$author)) {
+  #  }
+  #  if (!is.null(tempPDF$meta$author)) {
     #  title <- tempPDF$meta$id
      # name <- tempPDF$meta$id
-      author <- tempPDF$meta$author
-    }
+  #    author <- tempPDF$meta$author
+  #  }
      # des <- tempPDF$meta$datetimestamp
     #  y <- strsplit(as.character(des), "-")
     #  datetime <- des#y[[1]][1]
   #  }
-     if (is.null(tempPDF$meta$datetimestamp)) {
-       datetime <- split_title[2]#strsplit(id," - ")[[1]]
+  #   if (is.null(tempPDF$meta$datetimestamp)) {
+  #     datetime <- split_title[2]#strsplit(id," - ")[[1]]
     #   zoteroData()$texts[[1]]
      #  title <- "NA"
-     }
-     if (is.null(tempPDF$meta$author)) {
-       author <- split_title[1] #strsplit(id," - ")[[1]]
+   #  }
+   #  if (is.null(tempPDF$meta$author)) {
+   #    author <- split_title[1] #strsplit(id," - ")[[1]]
     #   author <- "NA"
-     }
+   #  }
    #  if (length(datetime)<1) {
    #    datetime <- strsplit(id," - ")[[2]]
    #  }
     # if (length(name)<1) {
     #   name <-x$name[i]
     # }
+    title <- lists[1]
+    datetime <- lists[3]
+    abstract <- lists[2]
+    name <- paste0(lists[5]," ",lists[4])
     titles[i] <- title
-    authors[i] <- author
+    authors[i] <- name
     datetimes[i] <- datetime
-   # names[i] <- name
+    names[i] <- name
+    abstracts[i] <- abstract
     text.extract[[i]] <- text.space
    # text.extract <- unlist(text.extract)
     
     
     #  }
   }
-  info <- list(titles=titles, authors=authors,datetimes=datetimes, text.extract=text.extract) 
+  info <- list(titles=titles, abstracts=abstracts, authors=authors,datetimes=datetimes, text.extract=text.extract) 
   return(info)
 }
 

@@ -1,3 +1,5 @@
+#options(shiny.reactlog=TRUE)
+#command+F3
 library(shiny)
 #source("myImagePlot.R")
 #source("multiplot.R")
@@ -159,44 +161,68 @@ zoteroData <- reactive ({
   uris.name <-  input$file.rdf$datapath
 
   # dir<-input$directory
-  zot.pdf <-  zotero(uris.name)
-  
+  #zot.pdf <-  zotero(uris.name)
+  zot.pdf <-  zotero_rdf(uris.name) #xml parsing - list of articles and sublist of 5: title, abstract,date,surname, firstname,link,type,path
   # dir.list <- list()
   dir.list <- vector()
+  title.list <- vector()
   k=1
   for (i in 1:length(zot.pdf)) {
-    if (zot.pdf[i]!="") {
-      text <- zot.pdf[i]
+   # if (zot.pdf[i]!="") {
+    if (!is.na(zot.pdf[[i]][1])) {
+      article <- zot.pdf[[i]]
+     # text <- zot.pdf[i]
       #path <- paste0(dir,text)
-      path <- paste0("/Users/olgascrivner/Documents/ITMS/Summer2017/TestingFiles/",text)
+      #path <- paste0("/Users/olgascrivner/Documents/ITMS/Summer2017/TestingFiles/",text)
+      path <- article[8] # file path
       dir.list[k] <- path
+      title <- article[1]
+      title.list[k] <- title
       k <- k+1
     }
   }
  # extractPdfZotero
 #  texts <- extractPdfZotero(dir.list)
-  texts <- extractPdfZotero(dir.list)
+
+ # texts <- extractPdfZotero(dir.list,zot.pdf)
+  texts <- extractPdfZotero(zot.pdf) # list of extracted articles with sublist of titles, abstracts, authors, datetimes, text.extracts
  # zot.data <-  extractZoteroTxt(uris.name)
  # info <- list(zot.pdf=zot.pdf,dir.list=dir.list)
-  info <- list(zot.pdf=zot.pdf,texts=texts)
+  info <- list(zot.pdf=zot.pdf,texts=texts, title.list=title.list)
   return(info)
  # return(zot.data)
 })
 
 output$zotero_term <-renderUI ({
-  list(textInput('zotero_term', "Enter your search term for Zotero", placeholder = "e.g., airport security"),
+  list(textInput('zotero_term', "Enter query 1 AND/OR query 2", placeholder = "european AND human"),
   actionButton("zotero_submit", "Submit") )
+})
+
+output$zotero_term2 <-renderUI ({
+  list(textInput('zotero_term2', "Enter your 2nd search term", placeholder = "human"),
+       actionButton("zotero_submit2", "Submit") )
+})
+
+output$zotero_condition <-renderUI ({
+  list(textInput('zotero_condition', "Condition: Enter OR or AND", placeholder = "AND"),
+       actionButton("zotero_submit3", "Submit") )
 })
 
 zotero_keywords_submitted <- eventReactive(input$zotero_submit, {
   input$zotero_term
+})
+zotero_keywords2_submitted <- eventReactive(input$zotero_submit2, {
+  input$zotero_term2
+})
+zotero_keywords3_submitted <- eventReactive(input$zotero_submit3, {
+  input$zotero_condition
 })
 
 
 
 
 output$choose_kwic_num <- renderUI({
-  selectizeInput("choose_kwic_num", label = "Select or Type Number of Words between Two Terms", 
+  selectizeInput("choose_kwic_num", label = "Select or Type number of words between two terms if your condition is AND", 
                  choices = c(2,3,4,5,6,7,8,9,10),
                  options = list(create = TRUE),
                  selected=3,
@@ -204,33 +230,49 @@ output$choose_kwic_num <- renderUI({
 }) 
 
 output$zotero_slider <- renderUI({
-  sliderInput("zotero_slider", "Window (left and right context):",
-              min = 0, max = 500, value = 15)
+  sliderInput("zotero_slider", "Window Length (left and right context):",
+              min = 0, max = 100, value = 5)
 })
 #######extractZoteroTerm function ####
 extractZoteroTerm <- reactive ({
   if (is.null(input$file.rdf))  { return() }
+ # if (is.null(zotero_keywords1_submitted()) &is.null(zotero_keywords2_submitted())) { return() }
   #z <- zoteroData()$texts
-  zot_data <- zoteroData()$texts[[4]]
+  zot_data <- zoteroData()$texts#[[5]]#[[4]]
  # links_pdf <- zoteroData()$dir.list#zot.pdf
   dir.list <- zoteroData()$dir.list
  # z <- zoteroData()$texts[[5]]#zoteroData()$zot.pdf#dir.list
  # author <-zoteroData()$texts[[2]]
  # title <- zoteroData()$texts[[1]]
  # date <- zoteroData()$texts[[3]]
-  query <- ""
-  if (!is.null( zotero_keywords_submitted() ) ) {
-    query1 <- gsub("\\s+", " ", zotero_keywords_submitted())
-    query  <- unlist(strsplit(query1," "))[1]
-    query2 <- unlist(strsplit(query1," "))[2]
+ # query1 <- gsub("\\s+", "",zotero_keywords1_submitted())
+ # query2 <- gsub("\\s+", "",zotero_keywords2_submitted())
+ # condition <- "and"
+  if (!is.null(zotero_keywords_submitted())) {
+    query <- gsub("\\s+", " ", tolower(zotero_keywords_submitted()))
+    query1  <- unlist(strsplit(query," "))[1]
+    query2 <- unlist(strsplit(query," "))[3]
+    condition <- unlist(strsplit(query," "))[2]
   }
+ # if (!is.null( zotero_keywords2_submitted()) ) {
+   # query1 <- gsub("\\s+", " ", zotero_keywords1_submitted())
+
+  #  query2 <- gsub("\\s+", "", tolower(zotero_keywords2_submitted()))
+ # }
+ # if (!is.null( zotero_keywords3_submitted()) ) {
+   # condition <- gsub("\\s+", "", tolower(zotero_keywords3_submitted()))
+#  }
+   # query  <- unlist(strsplit(query1," "))[1]
+    #query2 <- unlist(strsplit(query1," "))[2]
+ # }
   len <- as.integer(input$zotero_slider)
- # words <- input$choose_kwic_num
+  between <- as.integer(input$choose_kwic_num)
  # path <- input$file.rdf$datapath
  # extract <-  extractZotero(z,query,query2,len,words,author,title, date)#p1,p2)
   #extract <- zoteroData()$texts  #
  # extract <- extractZotero(links_pdf,query,query2,len,path)#, words)#p1,p2)
-  extract <- extractZoteroTxt(zot_data,query,query2,len, dir.list)
+ # extract <- extractZoteroTxt(zot_data,query,query2,len, dir.list)
+  extract <- extractZoteroTxt(zot_data,query1,query2,condition,len,between)
   withProgress(message = 'Preprocessing Zotero',
                detail = 'Almost done...', value = 0, {
                  for (i in 1:15) {
@@ -238,22 +280,23 @@ extractZoteroTerm <- reactive ({
                    Sys.sleep(0.25)
                  }
                })
-  return(extract)
+  return(extract) # list of 5 text.extract, titles, datetimes,authors, abstracts
 })
 
 ########print_content_rdf ######
 output$print_content_rdf <- renderUI({
   if (is.null(input$file.rdf))  { return() }
- # txt.lines <- extractZoteroTerm()[[2]]#$titles#zoteroData()$dir.list #directory()
+  txt.lines <- extractZoteroTerm()[[1]]#$titles#zoteroData()$dir.list #directory()
  # txt.lines <- zoteroData()$dir.list#extractZoteroTerm()$titles#zoteroData()$dir.list #directory()
-  txt.lines <- zoteroData()$texts[[1]]#[[2]]#extractZoteroTerm()$text.extract
+ # txt.lines <- zoteroData()$title.list#texts[[1]]#[[2]]#extractZoteroTerm()$text.extract
   HTML(paste("<br/>", txt.lines, sep="<br/>"))
 }) 
 ##########zotero_content function ########
 zotero_content <- reactive({
   if (is.null(input$file.rdf))  { return() }
- # txt.lines <- extractZoteroTerm()$text.extract#extractZoteroTerm()[[1]]
-  txt.lines <- extractZoteroTerm()
+  txt.lines <- extractZoteroTerm()$text.extract#extractZoteroTerm()[[1]]
+ # txt.lines <-zoteroData()$texts
+   # extractZoteroTerm()$text.extract# zoteroData()$texts[[5]]#extractZoteroTerm()
   return(txt.lines)
 })
 
@@ -365,9 +408,9 @@ fileData <- reactive({ # loading data
    # a <- extractZoteroTerm()[[4]]#$authors
    # t <- extractZoteroTerm()[[2]]#$titles
   #  dt <- extractZoteroTerm()[[3]]
-    a <- zoteroData()$texts[[2]]
-    t <- zoteroData()$texts[[1]]
-    dt <- zoteroData()$texts[[3]]
+    a <- extractZoteroTerm()$authors#zoteroData()$texts[[2]]
+    t <- extractZoteroTerm()$titles#zoteroData()$texts[[1]]
+    dt <- gsub("[a-zA-Z]* ","", extractZoteroTerm()$datetimes)#zoteroData()$texts[[3]]
     my_data <- data.frame(date=dt, title=t, author = a)
   }
   #else if( !is.null(input$structured_data_file_json) ) {
@@ -378,6 +421,7 @@ fileData <- reactive({ # loading data
 })
 #########zotero_metadata_table #######
 output$zotero_metadata_table <- renderDataTable({
+ # if (is.null(input$file.rdf)){ return() }
   if (is.null(input$file.rdf)){ return() }
    a <- extractZoteroTerm()[[4]]#$authors
    t <- extractZoteroTerm()[[2]]#$titles
@@ -501,7 +545,8 @@ PreprocessingSteps <- reactive ({
     }
     else if (!is.null(input$file.rdf)) {
       x <- zotero_content() #extractZoteroTerm()$text.extract#zotero_content()#extractZoteroTerm()$text.extract
-      y <- zoteroData()$texts[[1]]#extractZoteroTerm()$titles#extractZoteroTerm()$titles
+      y <- extractZoteroTerm()$titles
+       # zoteroData()$texts[[1]]#extractZoteroTerm()$titles#extractZoteroTerm()$titles
     }
     remove_urls <-input$remove_urls
     remove_references<-input$remove_references
@@ -572,7 +617,8 @@ RemoveWordsStepOne <-reactive({
     d <- data.frame(frequency = sort(rowSums(terms.matrix), decreasing = TRUE))
     d$word <- row.names(d)
     agg_freq <- aggregate(frequency ~ word, data = d, sum)
-    d <- d[order(d$frequency, decreasing = T), ]
+    #d <- d[order(d$frequency, decreasing = T), ]
+    d <- d[order(d$word), ]
     # words.list <- as.list(d$word)
     
   }
@@ -603,7 +649,8 @@ RemoveWordsStepOne <-reactive({
     d <- data.frame(frequency = sort(rowSums(terms.matrix), decreasing = TRUE))
     d$word <- row.names(d)
     agg_freq <- aggregate(frequency ~ word, data = d, sum)
-    d <- d[order(d$frequency, decreasing = T), ]
+   # d <- d[order(d$frequency, decreasing = T), ]
+    d <- d[order(d$word), ]
     # words.list <- as.list(d$word)
   }
   info <- list(corpus=corpus,d=d,lda.corpus=lda.corpus)
@@ -672,7 +719,7 @@ RemoveWordsStepTwo <-reactive({
     file.names <-  input$file.tag$name
   }
   if(!is.null(input$file.rdf)) {
-    file.names <- zoteroData()$texts[[1]]#extractZoteroTerm()$titles
+    file.names <- extractZoteroTerm()$titles#zoteroData()$texts[[1]]#extractZoteroTerm()$titles
   }
   colnames(term.matrix) <- file.names
   corpus.paste <-paste(corpus, sep=" ")

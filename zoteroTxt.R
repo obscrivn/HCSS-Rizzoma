@@ -1,88 +1,148 @@
-extractZoteroTxt <- function(zot_data,query,query2,len, dir.list){
+extractZoteroTxt <- function(zot_data,query1,query2,condition, len, between){
    # num <- length(x$name)
-  zot_data <- zot_data
+  require(tm)
+  require(qdapRegex)
+  #zot_data <- unlist(zot_data)
+ # zot_data <- 
   #zot_data <- text.extract
-  num <- length(zot_data)
-  query = query
+  num <- length(zot_data[[5]])
+  query1 = query1
   query2 = query2
+  condition = condition
   len <- len
-  context <- 5
+  between <- between
+ # context <- 5
+  lines <- list()
   text.extract <- list()
-  kwic.extract <- list()
-  z = 1
+  #kwic.extract <- list()
+#
+  w = 1
+  titles <- vector()
+  authors <- vector()
+  datetimes <- vector()
+  abstracts <- vector()
+  contents <- list()
+
    # texts <- vector()
    # titles <-vector()
    # authors <- vector()
   #  datetimes <- vector()
     for (i in 1:num) {
-     # uris.name <- x$datapath[i]
-    #  text.scan <- scan(uris.name, what="character", sep="\n",blank.lines.skip = FALSE)  
-      data = zot_data[[i]]
-      text.collapse <- paste(data, collapse = " ")
-      text.hyphen <- gsub("-\\s+","",text.collapse)
-      text.space <- gsub("\\s\\s+"," ",text.hyphen)
-      text.split <- unlist(strsplit(text.space, " "))
-     # text <- paste(data[i], collapse = " ")
-      
-     # text <- gsub("-\\s+", "", text) 
-    #  texts[i] <- text
-      #nrow(k)
-      k <- kwic(text.space, query,context,valuetype = "regex")
-      kpaste <- paste(k$contextPre,k$keyword,k$contextPost,collapse=" ")
-      if (grepl(query2,kpaste)) {
-        if (length(k) == 5) {
-          for (l in 1:nrow(k)) {
-         # text.split[6+1]
-          if (((k$position[l]+1)-context-len)<1) {
-            start <- (k$position[l]+1)-context
-          } else if (((k$position[l]+1)-context-len)>0) {
-            start <- (k$position[l]+1)-context-len
-          }
-          if (((k$position[l]+1)+context+len) > length(text.split)) {
-            end <- k$position[l]+1+context
-          }  else {
-            end  <- k$position[l]+1+context+len
-              
-          }
-            if (start<1) {
-              start <- k$position[l]+1
-            }
-            if ((end <1) | (end > length(text.split))) {
-              end <- k$position[l]+1
-            }
-
-           # text.split[((k$position[1]+1)-context-len):((k$position[1]+1)+context+len)]            
-       zot <-  paste(text.split[start:end], collapse= " ")
-         # zot <- paste(k$contextPre,k$keyword,k$contextPost,collapse=" ")
-          zot <- gsub("\\s\\s+"," ",zot)
-          kwic.extract[[l]] <- zot
-          }
-          kwic.paste <- paste(unlist(kwic.extract), collapse=" ")
-          text.extract[[i]] <- kwic.paste
-         # text.space[k$keyword]
-         # text.extract[[z]] <- zot
-          # k <- kwic(text.space, query,len)
-          # if (!is.na(k)) {
-          #  if (length(k) == 5) {
-          #    zot <- paste(k$contextPre,k$keyword,k$contextPost,collapse=" ")
-          #   zot <- gsub("\\s\\s+"," ",zot)
-          # titles[z] <- read.meta
-         # text.extract[[z]] <- zot
-          #  text.full[z] <- text.space
-        #  z = z+1
-        }
-     # name.parse <- strsplit(x$name[i],"-")
-     # author.parse <- name.parse[1]
-    #  year.parse <- name.parse[2]
-    #  title.parse <- name.parse[3]
-    #  titles[i] <- title.parse
-     # authors[i] <- author.parse
-    #  datetimes[i] <- year.parse
-      }
+     # lines.merge=NA
+      #content <- zot_data[[i]]
+      content <- zot_data[[5]][i]
+      corpus.collapse<-paste(content,collapse=" ")
+      text.punct<-  gsub('[[:digit:]]+', '', corpus.collapse)
+      text.punct <- tolower(text.punct)
+      text.punct <-rm_citation(text.punct)
+      text.punct <-rm_citation(text.punct, pattern="@rm_citation3")
+      text.punct <-rm_citation(text.punct, pattern="@rm_citation2")
+      text.punct <-rm_round(text.punct)
+      text.punct <-rm_curly(text.punct)
+      text.punct <-rm_square(text.punct)
+      text.split<-unlist(strsplit(text.punct, "References|references|REFERENCES"))
+      #text.split <- unlist(text.p)
+      text.punct<-text.split[1]
+      text.punct <- gsub("[^[:alnum:] ]", "", text.punct)
+      text.punct <- gsub("\\s\\s+"," ",text.punct)
+      # lda.list <- unlist(strsplit(corpus.collapse[[i]], "\\s+"))
+      lda.list <- unlist(strsplit(text.punct, "\\s+"))
+      # remove punctuation
+     # if (condition %in% "and") {
+        loc1 <- grep(query1, lda.list,perl=TRUE)
+        loc2 <- grep(query2, lda.list,perl=TRUE)
+        ### choose the smallest
+       # list.loc <- list(loc1,loc2)
+      #  if (length(loc1)<length(loc2)){
+           z=0
+          # ### Add between window
+           for (k in 1:length(loc1)) {
+            # if ((loc1[k]-between)>0) {
+             strings <- lda.list[(loc1[k]):(loc1[k]+between)]
+          #   }
+          #   else {
+          #     strings <- lda.list[(loc1[k]):(loc1[k]+between)]
+          #   }
+             if (query2 %in% strings) {
+               z=z+1
+               ### add left and right context
+               if ((loc1[k]-between-len)<1 ){
+                 match.string <- lda.list[(loc1[k]):(loc1[k]+between+len)]
+               }
+              else {
+               match.string <- lda.list[(loc1[k]-between-len):(loc1[k]+between+len)]
+              }
+               line <- paste(match.string, collapse=" ")
+               line <- gsub("\\s\\s+"," ",line)
+               lines[[z]] <- line
+              # z=z+1
+             }
+           }
+          # if (z>0) {
+          lines.merge <- paste(unlist(lines), collapse=" ")
+        #  text.extract[[w]] <- lines.merge
+          title <- zot_data[[1]][i]
+          datetime <- zot_data[[4]][i]
+          abstract <- zot_data[[2]][i]
+          name <- zot_data[[3]][i]
+          titles[w] <- title
+          authors[w] <- name
+          datetimes[w] <- datetime
+          abstracts[w] <- abstract
+          w=w+1
+       #    }
+      #  }
+        # else {
+        #     z=0
+        #   ### Add between window
+        #   for (k in 1:length(loc2)) {
+        #    # if ((loc2[k]-between)>0) {
+        #     strings <- lda.list[(loc2[k]):(loc2[k]+between)]
+        #     if (query1 %in% strings) {
+        #       z=z+1
+        #       ### add left and right context
+        #       match.string <- lda.list[(loc2[k]-between-len):(loc2[k]+between+len)]
+        #       line <- paste(match.string, collapse=" ")
+        #       line <- gsub("\\s\\s+"," ",line)
+        #      # lines[[k]] <- line
+        #       lines[[z]] <- line
+        #       #z=z+1
+        #     }
+        #   }
+        #     lines.merge <- paste(unlist(lines), collapse=" ")
+        #   #  if (z>0) {
+        #  # lines.merge <- paste(unlist(lines), collapse=" ")
+        #  # text.extract[[w]] <- lines.merge
+        #   title <- zot_data[[1]][i]
+        #   datetime <- zot_data[[4]][i]
+        #   abstract <- zot_data[[2]][i]
+        #   name <- zot_data[[3]][i]
+        #   titles[w] <- title
+        #   authors[w] <- name
+        #   datetimes[w] <- datetime
+        #   abstracts[w] <- abstract
+        #   w=w+1
+        #   text.extract[[w]] <- lines.merge
+        # }
+        #contents[[i]] <- loc1
+         #text.extract[[i]] <- content
+        
+     #   }
+       # lines.merge <- paste(unlist(lines), collapse=" ")
+       # if (!is.na(lines.merge)) {
+      text.extract[[i]] <- lines.merge
+          
+   
+    
+       # }
+       # text.extract[[i]] <- lda.list
     }
-  text.extract <- unlist(text.extract)
-  #  info <- list(texts=texts,titles=titles,datetimes=datetimes, authors=authors)
-    return(text.extract)
+ # lines.merge <- paste(unlist(lines), collapse=" ")
+  
+  text.extract <- unlist(text.extract) 
+
+    info <- list(contents=contents,text.extract=text.extract,titles=titles,datetimes=datetimes, authors=authors, abstracts=abstracts)
+    return(info)
   }
 
   # #Get all the lines of interest in the file

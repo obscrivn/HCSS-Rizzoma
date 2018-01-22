@@ -1,22 +1,88 @@
 #corpus=text.extract
-#len=3
-#term="tweet"
+len=3
+between = 3
+query1="european"
+query2="the"
+condition = "AND"
+uris.name = "files/137484/Auby - 2014 - About Europeanization of Domestic Judicial Review.pdf"
+f <- tempPDF <- readPDF(control = list(info="-f",text = "-layout"))(elem = list(uri = uris.name),
+                                                                    language="en",id="id1")
+read.file <- tempPDF$content
+#  id <- tempPDF$meta$id
+#  title <- tempPDF$meta$id
+texts <- enc2utf8(read.file)
+text.collapse <- paste(texts,collapse=" ")
+text.hyphen <- gsub("-\\s+","",text.collapse)
+text.space <- gsub("\\s\\s+"," ",text.hyphen)
 #w1 - key word 1
 #w2 - keyword2
 #l - length between
 #context - left/right
+content <- text.space
 #z - corpus
-kwics <- function(w1, w2, l, content,z x, w,z,y) {
-  len=as.numeric(l)  #x
-  term=w1
-  corpus=z
-  num=as.numeric(context)
+kwics <- function(query1, query2, condition, len, content,between) {
+  len=as.numeric(len)  #x
+  query1 = query1
+  query2 = query2
+  condition = condition
+ # term=w1
+ # corpus=z
+ # num=as.numeric(context)
  # num=as.numeric(y)
   extraction <- list()
+  text.extract <- list()
+  lines <- list()
   doc<-list()
  # for (i in 1:num) { # documents number
-    corpus.collapse<-paste(corpus,collapse=" ")
-    lda.list <- unlist(strsplit(corpus.collapse[[i]], "\\s+"))
+   # corpus.collapse<-paste(corpus,collapse=" ")
+  corpus.collapse<-paste(content,collapse=" ")
+  text.punct<-  gsub('[[:digit:]]+', '', corpus.collapse)
+  text.punct <- tolower(text.punct)
+  text.punct <-rm_citation(text.punct)
+  text.punct <-rm_citation(text.punct, pattern="@rm_citation3")
+  text.punct <-rm_citation(text.punct, pattern="@rm_citation2")
+  text.punct <-rm_round(text.punct)
+  text.punct <-rm_curly(text.punct)
+  text.punct <-rm_square(text.punct)
+  text.split<-unlist(strsplit(text.punct, "References|references|REFERENCES"))
+  #text.split <- unlist(text.p)
+  text.punct<-text.split[1]
+  text.punct <- gsub("[^[:alnum:] ]", "", text.punct)
+  text.punct <- gsub("\\s\\s+"," ",text.punct)
+   # lda.list <- unlist(strsplit(corpus.collapse[[i]], "\\s+"))
+    lda.list <- unlist(strsplit(text.punct, "\\s+"))
+    # remove punctuation
+   if (condition %in% "and") {
+     loc1<- grep(query1, lda.list,perl=TRUE)
+     loc2<- grep(query2, lda.list,perl=TRUE)
+     ### choose the smallest
+     list.loc <- list(loc1,loc2)
+     if (length(loc1)<length(loc2) |length(loc1)==length(loc2)){
+       
+     }
+     else if (length(loc2)<length(loc1)) {
+       ### Add between window
+       z=1
+       i=1
+       for (k in 1:length(loc2)) {
+      strings <- lda.list[(loc2[1]-between):(loc2[1]+between)]
+       if (query1 %in% strings) {
+         ### add left and right context
+         match.string <- lda.list[(loc2[1]-between-len):(loc2[1]+between+len)]
+         line <- paste(match.string, collapse=" ")
+         line <- gsub("\\s\\s+"," ",line)
+         lines[[z]] <- line
+         z=z+1
+       }
+       lines.merge <- paste(unlist(lines), collapse=" ")
+       }
+       
+       text.extract[[i]] <- lines.merge
+       text.extract <- unlist(text.extract) 
+     }
+   # list.sorted <-  list.loc[order(sapply(list.loc,length),decreasing=F)]
+    
+   }
     loc<- grep(term, lda.list,perl=TRUE)
     for (k in 1:length(loc)) { # one term indexes
     #  ext <-  lda.list[(loc[y]-len):(loc[y]+len)] 
@@ -27,7 +93,7 @@ kwics <- function(w1, w2, l, content,z x, w,z,y) {
     }
     doc<-unlist(doc)
     extraction[[i]] <- doc
-  }
+ # }
   extraction<-unlist(extraction)
   return(extraction)
 }
