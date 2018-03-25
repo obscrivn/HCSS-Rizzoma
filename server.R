@@ -9,6 +9,7 @@ source("extractMetadata.R")
 source("abstract.R")
 source("words.R")
 source("preprocess.R")
+source("ngrams.R")
 #source("kwics.R")
 source("parseJSON.R")
 source("parseMODS.R")
@@ -22,6 +23,8 @@ library(fields)
 library(ggthemes)
 library(graphics)
 library(jsonlite)
+library(tidyverse)
+library(DT )
 #library(RcppArmadillo)
 library(ggplot2)
 library(ggplot2movies)
@@ -186,9 +189,17 @@ zoteroData <- reactive ({
 
  # texts <- extractPdfZotero(dir.list,zot.pdf)
   texts <- extractPdfZotero(zot.pdf) # list of extracted articles with sublist of titles, abstracts, authors, datetimes, text.extracts
- # zot.data <-  extractZoteroTxt(uris.name)
+  withProgress(message = 'Preprocessing Zotero',
+               detail = 'It may take a while...', value = 0, {
+                 for (i in 1:15) {
+                   incProgress(1/15)
+                   Sys.sleep(0.25)
+                 }
+               })
+  # zot.data <-  extractZoteroTxt(uris.name)
  # info <- list(zot.pdf=zot.pdf,dir.list=dir.list)
-  info <- list(zot.pdf=zot.pdf,texts=texts, title.list=title.list)
+#  print(texts)
+  info <- list(zot.pdf=zot.pdf,texts=texts, title.list=title.list, dir.list=dir.list)
   return(info)
  # return(zot.data)
 })
@@ -273,7 +284,7 @@ extractZoteroTerm <- reactive ({
  # extract <- extractZotero(links_pdf,query,query2,len,path)#, words)#p1,p2)
  # extract <- extractZoteroTxt(zot_data,query,query2,len, dir.list)
   extract <- extractZoteroTxt(zot_data,query1,query2,condition,len,between)
-  withProgress(message = 'Preprocessing Zotero',
+  withProgress(message = 'Extracting Terms',
                detail = 'Almost done...', value = 0, {
                  for (i in 1:15) {
                    incProgress(1/15)
@@ -1592,4 +1603,38 @@ output$chronology_top2 <- renderPrint ({
   # if((input$chronology=="None") || (is.null(input$chronology))) { return() }
   chronology()$term
 })
+#### NGRAM #####
+ngramFunction <- reactive({
+  if (is.null(input$file.rdf))  { return() }
+  extract <- extractZoteroTerm()
+  ngram <- ngramBuilder(extract)
+  return(ngram)
+})
+
+output$ngram1 <- renderPlot({
+  bigrams_counts_united <- ngramFunction()[[1]]
+  ggplot(bigrams_counts_united[1:15,],aes(bigram, n)) +
+    geom_col(show.legend = FALSE) +
+    labs(x = NULL, y = "count") +
+    coord_flip()
+})
+
+output$ngram2 <- renderPlot({
+  bigram_tf_idf <- ngramFunction()[[3]]
+  ggplot(bigram_tf_idf, aes(bigram, tf_idf, fill = title)) +
+    geom_col(show.legend = FALSE) +
+    labs(x = NULL, y = "tf-idf") +
+    facet_wrap(~title, ncol = 1, scales = "free") +
+    coord_flip()
+#plot(bigram_tf_idf)
+})
+
+output$freq_unigram <- renderDataTable({
+  ngramFunction()[[5]]
+})
+
+output$freq_bigram <- renderDataTable({
+  ngramFunction()[[4]]
+})
+
 })

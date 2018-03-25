@@ -370,21 +370,53 @@ shinyUI(navbarPage(theme = "bootstrap.min.css",
     ),    
     
     #navbarMenu(title = "Data Visualization",
- ####### Word Frequency ##########
-              #  tabPanel(strong("Word Frequency"),
-              # # tabPanel("Word Frequency",
-              #           fluidPage(
-              #             navlistPanel(
-              #               widths = c(2, 10),
-                            # tabPanel("Frequency Table",
-                            #          fluidPage(
-                            #            fluidRow(
-                            #              column(6, 
-                            #                     tags$h4("Raw Frequency"),
-                            #                     tags$hr(),
-                            #                     # checkboxInput('show_freq','Frequency',FALSE),
-                            #                     dataTableOutput("freq")
-                            #              ),
+########## NGRAM #########
+                tabPanel(strong("Ngrams"),
+                #tabPanel("Word Frequency",
+                         fluidPage(
+                           navlistPanel(
+                             widths = c(2, 10),
+                             tabPanel("Unigram",
+                                      fluidPage(
+                                        fluidRow(
+                                          column(12, 
+                                                 tags$h4("Frequency Table - Unigram"),
+                                                 tags$hr(),
+                                                 # checkboxInput('show_freq','Frequency',FALSE),
+                                                 dataTableOutput("freq_unigram")
+                                          )
+                                        )
+                                      )
+                             ),
+                             tabPanel("Bigram",
+                                      fluidPage(
+                                        fluidRow(
+                                          column(12, 
+                                                 tags$h4("Frequency Table - Bigram"),
+                                                 tags$hr(),
+                                                 # checkboxInput('show_freq','Frequency',FALSE),
+                                                 dataTableOutput("freq_bigram")
+                                          )
+                                        )
+                                      )
+                             ),
+
+                             tabPanel("Ngram Visualization",
+                                      p("Ngram analysis",
+                                        fluidPage(
+                                          fluidRow(
+                                            column(6,
+                                                   tags$h4("Ngram Total"),
+                                                   plotOutput("ngram1"))
+                                          ),
+                                          fluidRow(
+                                            column(12,
+                                                   tags$h4("Ngram By Title"),
+                                                   plotOutput("ngram2"))
+                                          )
+                                        )
+                                      )
+                             )
                             #              column(5, 
                             #                     tags$h5("Frequency Law"),
                             #                     tags$hr(),
@@ -394,10 +426,10 @@ shinyUI(navbarPage(theme = "bootstrap.min.css",
                             #                     plotOutput("zipf")
                             #                     # p("Heaps plot - tm package"),
                             #                     #plotOutput("heaps")
-                            #              )
-                            #            )
-                            #          )
-                            # ),
+
+                             )
+                           )
+                ),
                             tabPanel(strong("Word Clouds"),
                                      
                                      fluidPage(
@@ -458,7 +490,8 @@ shinyUI(navbarPage(theme = "bootstrap.min.css",
                                      
                             ),
 
- ########## Cluster Analysis #########
+
+########## Cluster Analysis #########
     tabPanel(strong("Cluster Analysis"),
              p("Cluster Analysis (Descriptive Statistics) examines 
                how variables or individuals are grouped. The visual 

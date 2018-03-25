@@ -6,11 +6,17 @@ extractZoteroTxt <- function(zot_data,query1,query2,condition, len, between){
  # zot_data <- 
   #zot_data <- text.extract
   num <- length(zot_data[[5]])
+ # print(num)
+ # num <- length(zot_data[[5]])
   query1 = query1
+ # print(query1)
+ # print(query2)
   query2 = query2
   condition = condition
   len <- len
+ # print(len)
   between <- between
+#  print(between)
  # context <- 5
   lines <- list()
   text.extract <- list()
@@ -22,17 +28,21 @@ extractZoteroTxt <- function(zot_data,query1,query2,condition, len, between){
   datetimes <- vector()
   abstracts <- vector()
   contents <- list()
-
    # texts <- vector()
    # titles <-vector()
    # authors <- vector()
   #  datetimes <- vector()
+ # zot_data_texts <- zot_data[[5]]
+ # length(zot_data_texts)
     for (i in 1:num) {
      # lines.merge=NA
-      #content <- zot_data[[i]]
+     # content <- zot_data[[i]]
       content <- zot_data[[5]][i]
-      corpus.collapse<-paste(content,collapse=" ")
-      text.punct<-  gsub('[[:digit:]]+', '', corpus.collapse)
+      #content <- zot_data_texts[i]
+    #  content <- zot_data[i]
+     # print(content)
+      corpus.collapse <- paste(content,collapse=" ")
+      text.punct <- gsub('[[:digit:]]+', '', corpus.collapse)
       text.punct <- tolower(text.punct)
       text.punct <-rm_citation(text.punct)
       text.punct <-rm_citation(text.punct, pattern="@rm_citation3")
@@ -42,7 +52,7 @@ extractZoteroTxt <- function(zot_data,query1,query2,condition, len, between){
       text.punct <-rm_square(text.punct)
       text.split<-unlist(strsplit(text.punct, "References|references|REFERENCES"))
       #text.split <- unlist(text.p)
-      text.punct<-text.split[1]
+      text.punct <- text.split[1]
       text.punct <- gsub("[^[:alnum:] ]", "", text.punct)
       text.punct <- gsub("\\s\\s+"," ",text.punct)
       # lda.list <- unlist(strsplit(corpus.collapse[[i]], "\\s+"))
@@ -50,13 +60,18 @@ extractZoteroTxt <- function(zot_data,query1,query2,condition, len, between){
       # remove punctuation
      # if (condition %in% "and") {
         loc1 <- grep(query1, lda.list,perl=TRUE)
+       # length(loc1)
         loc2 <- grep(query2, lda.list,perl=TRUE)
+       # loc3 <- grep("txtttt", lda.list,perl=TRUE)
+       # length(loc3)
+        if ((length(loc1) > 0) & length(loc2)>0) {
         ### choose the smallest
        # list.loc <- list(loc1,loc2)
       #  if (length(loc1)<length(loc2)){
            z=0
           # ### Add between window
            for (k in 1:length(loc1)) {
+            # k=1
             # if ((loc1[k]-between)>0) {
              strings <- lda.list[(loc1[k]):(loc1[k]+between)]
           #   }
@@ -64,32 +79,44 @@ extractZoteroTxt <- function(zot_data,query1,query2,condition, len, between){
           #     strings <- lda.list[(loc1[k]):(loc1[k]+between)]
           #   }
              if (query2 %in% strings) {
+              # print("TRUE")
                z=z+1
                ### add left and right context
                if ((loc1[k]-between-len)<1 ){
                  match.string <- lda.list[(loc1[k]):(loc1[k]+between+len)]
                }
+              else if ((loc1[k]+between+len)>loc1[length(loc1)]){
+                 match.string <- lda.list[(loc1[k]-between-len):(loc1[k])]
+               }
               else {
-               match.string <- lda.list[(loc1[k]-between-len):(loc1[k]+between+len)]
-              }
+                match.string <- lda.list[(loc1[k]-between-len):(loc1[k]+between+len)]
+                }
                line <- paste(match.string, collapse=" ")
                line <- gsub("\\s\\s+"," ",line)
+              # length(line)
                lines[[z]] <- line
               # z=z+1
-             }
-           }
+             #}
+          # }
           # if (z>0) {
           lines.merge <- paste(unlist(lines), collapse=" ")
         #  text.extract[[w]] <- lines.merge
-          title <- zot_data[[1]][i]
-          datetime <- zot_data[[4]][i]
-          abstract <- zot_data[[2]][i]
-          name <- zot_data[[3]][i]
-          titles[w] <- title
-          authors[w] <- name
-          datetimes[w] <- datetime
-          abstracts[w] <- abstract
-          w=w+1
+         # title <- zot_data[[1]][i]
+         # datetime <- zot_data[[4]][i]
+         # abstract <- zot_data[[2]][i]
+        #  name <- zot_data[[3]][i]
+       #   titles[w] <- title
+        #  authors[w] <- name
+        #  datetimes[w] <- datetime
+        #  abstracts[w] <- abstract
+         # t = w
+         # w=w+1
+             }
+             else {
+             # print("FALSE") 
+               lines.merge = NULL}
+             
+           }
        #    }
       #  }
         # else {
@@ -129,16 +156,27 @@ extractZoteroTxt <- function(zot_data,query1,query2,condition, len, between){
         
      #   }
        # lines.merge <- paste(unlist(lines), collapse=" ")
-       # if (!is.na(lines.merge)) {
-      text.extract[[i]] <- lines.merge
-          
-   
-    
-       # }
+        if (!is.null(lines.merge)) {
+          title <- zot_data[[1]][i]
+          datetime <- zot_data[[4]][i]
+          abstract <- zot_data[[2]][i]
+          name <- zot_data[[3]][i]
+      text.extract[[w]] <- lines.merge
+      titles[w] <- title
+      authors[w] <- name
+      datetimes[w] <- datetime
+      abstracts[w] <- abstract
+      contents[w] <- content
+      print(w)    
+      w=w+1
+  # print(lines.merge)
+
+        }
        # text.extract[[i]] <- lda.list
+        }
     }
  # lines.merge <- paste(unlist(lines), collapse=" ")
-  
+ # length(text.extract)
   text.extract <- unlist(text.extract) 
 
     info <- list(contents=contents,text.extract=text.extract,titles=titles,datetimes=datetimes, authors=authors, abstracts=abstracts)

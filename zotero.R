@@ -1,32 +1,57 @@
 # parse rdf zotero files
-# x<- "/Users/olgascrivner/Documents/ITMS/Summer2017/TestingFiles/EuropeanInfluencetest.rdf"
-# zot.pdf <-  zotero(x)
+
+# zotero.rdf <-  zotero(x)
+#zotero2[[2]]
+#zotero2 <- zotero_rdf(x)
+#length(zotero2)
+#zotero2[[1]]
+#zoteropdf <- extractPdfZotero(zotero2)
+
+#zoteropdf[[5]][1]
+#zot_data <- zoteropdf#[[5]]
+#length(zot_data)
+#k=3
 # query="europ"
-# query2="influence"
+# query1="cyberspace"
+# query2="policy"
+# query2="operations"
+# condition = "and"
+# between = 5
 # len = 10
+# i=5
 # path_to_rdf = x
 # k=1
-# dir.list <- vector()
-# for (i in 1:length(zot.pdf)) {
-#   if (zot.pdf[i]!="") {
-#     text <- zot.pdf[i]
-#     #path <- paste0(dir,text)
-#     path <- paste0("/Users/olgascrivner/Documents/ITMS/Summer2017/TestingFiles/",text)
-#     dir.list[k] <- path
-#     k <- k+1
-#   }
-# }
+
 # 
 # mydata <- extractZotero(dir.list,query,query2,len, path_to_rdf)
 # mydata$titles
-
+#extract <- mydata
+# mydata <- extractZoteroTxt(zot_data,query1,query2,condition, len, between)
+#length(mydata[[2]])
 zotero_rdf <- function(x) {
   require(XML)
   xml = xmlTreeParse(x,useInternalNodes=TRUE)
   k=1
   articles <- list()
+  title <- ""
+  abstract <- ""
+  date <- ""
+  surname <- ""
+  firstname <- ""
+  link <- ""
+  type <- ""
+  path <- ""
   nodes = getNodeSet(xml, "//bib:Article")
+ #nodes = xpathSApply(xml, "//bib:[contains(Article) or contains(Report)]",xmlValue)
+#bib:BookSection
+  #bib:Thesis
+  attachments <- getNodeSet(xml, "//z:Attachment") 
+  
+  print(length(nodes))
+  print(length(attachments))
+i=4
   for (i in 1:length(nodes)) {
+  #  print("NEW")
     node <- nodes[[i]]
     doc <- xmlToList(node)
     title <-   doc$title
@@ -35,20 +60,40 @@ zotero_rdf <- function(x) {
     surname <- doc$authors$Seq$li$Person$surname
     firstname <- doc$authors$Seq$li$Person$givenname
     link <- doc$link@.Data
-    
-    attachments <- getNodeSet(xml, "//z:Attachment") 
+   # print(link)
+   # attachments <- getNodeSet(xml, "//z:Attachment") 
+   
     attachment <- attachments[[i]]
     doc2 <- xmlToList(attachment)
-    
+   # print(doc2$.attrs[[1]])
     ## Test for file item # between article and  attachement
-    if (link %in% doc2$.attrs[[1]]==TRUE){
+    if (link %in% doc2$.attrs[[1]]==TRUE) {
+    #  print(link)
+     # print(doc2$.attrs[[1]])
       type <-  doc2$type # test pdf
       path <-   doc2$resource@.Data  # file path
-      if (type %in% "application/pdf"==TRUE) {
+     # if (type %in% "application/pdf"==TRUE) {
+      if (is.null(title)) {title=""}
+      if (is.null(date)) {date=""}
+      if (is.null(abstract)) {abstract=""}
+      if (is.null(surname)) {surname=""}
+      if (is.null(firstname)) {firstname=""}
+      if (is.null(link)) {link=""}
+      if (is.null(type)) {type=""}
+      if (is.null(path)) {path=""}
         article <- c(title, abstract,date,surname, firstname,link,type,path)
         articles[[k]] <- article
         k=k+1
-      }}}
+   #     print(type)
+    #    print(path)
+    }
+        else { print("none")
+      #    print("NEW")
+     #     print(link)
+         # print(doc2$.attrs[[1]])
+      #    print(path)
+        }
+    }#}
   return(articles)
 }
   zotero <- function(x) {
@@ -103,7 +148,13 @@ zoteroMeta <- function(x) {
 extractPdfZotero <- function(zot.rdf) {
  # list.rdf <- list.rdf
  # num <- length(list.rdf)
+ # zot.rdf <- zot.pdf
+  removeURL <- function(x) gsub("http[^[:space:]]*", "", x)
+ # removeWWW <- function(x) gsub("www[^[:space:]]*", "", x)
   require(tm)
+  substrRight <- function(x, n){
+    substr(x, nchar(x)-n+1, nchar(x))
+  }
  num <- length(zot.rdf) # list of rdf articles with sublist of 5 title, abstract,date,surname, firstname,link,type,path
   titles <-vector()
 authors <-vector()
@@ -112,19 +163,29 @@ authors <-vector()
   names <- vector()
   # cont <- rep("",num)
   text.extract <- list()
+ # pdf.str <- ".pdf" 
   for (i in 1:num) {
     lists <- zot.rdf[[i]]
    # uris.name <- as.character(paste0(list.rdf[i]))
     uris.name <- lists[8]
+   # print(uris.name)
+    # uris.name <- zotero.rdf[5]
+   # if (uris.name %in% ".pdf") {
+    
+  #  if (substrRight(uris.name,3)=="pdf") {
+   # uris.name <- "/Users/olgascrivner/Documents/ITMS/TextMiningZotero/HCSS-Rizzoma/files/3422/Adamsky_2018_From Moscow with coercion.pdf"
     # if (nchar(uris.name)<100) {
+    #  print(substrRight(uris.name,3))
     tempPDF <- readPDF(control = list(info="-f",text = "-layout"))(elem = list(uri = uris.name),
                                                                    language="en",id="id1")
     read.file <- tempPDF$content
+  #  print(read.file)
   #  id <- tempPDF$meta$id
   #  title <- tempPDF$meta$id
     texts <- enc2utf8(read.file)
     text.collapse <- paste(texts,collapse=" ")
-    text.hyphen <- gsub("-\\s+","",text.collapse)
+    text.url <- removeURL(text.collapse)
+    text.hyphen <- gsub("-\\s+","",text.url)
     text.space <- gsub("\\s\\s+"," ",text.hyphen)
   #  split_title <- unlist(strsplit(id," - "))
    # if (!is.null(tempPDF$meta$datetimestamp)) {
@@ -161,7 +222,16 @@ authors <-vector()
     #   name <-x$name[i]
     # }
     title <- lists[1]
-    datetime <- lists[3]
+    n <- length(strsplit(lists[3], " ")[[1]])
+    if (n==1) {
+      datetime <- lists[3]
+    }
+    else if (n>1) {
+      datetime <- strsplit(lists[3], " ")[[1]][n]
+    } 
+    else {
+      datetime <- ""# tempPDF$meta$datetimestamp
+      }    
     abstract <- lists[2]
     name <- paste0(lists[5]," ",lists[4])
     titles[i] <- title
@@ -171,8 +241,10 @@ authors <-vector()
     abstracts[i] <- abstract
     text.extract[[i]] <- text.space
    # text.extract <- unlist(text.extract)
-    
-    
+   # }
+ #   else {print("none")}
+  #  print("extractpdfzotero")
+  #  print(i)
     #  }
   }
   info <- list(titles=titles, abstracts=abstracts, authors=authors,datetimes=datetimes, text.extract=text.extract) 
@@ -180,8 +252,8 @@ authors <-vector()
 }
 
 
-
-
+#extract <- extractZotero(uris.name,query,query2,len, x)
+#extract
 extractZotero <- function(links_pdf,query,query2,len, path_to_rdf){#, words){#p1,p2) {
   path = links_pdf
  # path <- dir.list
@@ -196,9 +268,10 @@ extractZotero <- function(links_pdf,query,query2,len, path_to_rdf){#, words){#p1
   authors <- vector()
   datetimes <- vector()
   z = 1
+ #  uris.name = zotero.rdf[3]
   for (i in 1:num) {
     uris.name <- paste0(path[i])
-    #uris.name <- "/Users/olgascrivner/Documents/ITMS/Summer2017/TestingFiles/files/137482/Giliker - 2015 - The Influence of Eu and European Human Rights Law .pdf"
+    #uris.name <- "/Users/olgascrivner/Documents/ITMS/TextMiningZotero/HCSS-Rizzoma/English - first spiral corpus.rdf"
     # uris.name <-"/Users/olgascrivner/Documents/MCS/TextMiningClass/Project/TestingFiles/files/137482/Giliker - 2015 - The Influence of Eu and European Human Rights Law .pdf"
     tempPDF <- readPDF(control = list(info="-f",text = "-layout"))(elem = list(uri = uris.name),language="en",id="id1")
     read.file <- tempPDF$content
@@ -460,7 +533,6 @@ extractZotero <- function(links_pdf,query,query2,len, path_to_rdf){#, words){#p1
 #     z=1
 #     for (i in 1:num) {
 #       uris.name <- paste0(path[i])
-#      # uris.name <-"/Users/olgascrivner/Documents/MCS/TextMiningClass/Project/TestingFiles/files/137482/Giliker - 2015 - The Influence of Eu and European Human Rights Law .pdf"
 #        tempPDF <- readPDF(control = list(info="-f",text = "-layout"))(elem = list(uri = uris.name),language="en",id="id1")
 #        read.file <- tempPDF$content
 #        datetime <- data.lines[i]
