@@ -54,9 +54,9 @@ library(wordcloud)
 library(XML)
 
 library(viridis)
-
+load(file="zoteropdf.rda")
 shinyServer(function(input, output) {
-  
+
   output$print_name_article <- renderPrint({
     if (is.null(input$file.article)) { return() }
     paste(input$file.article$name, sep="\n")
@@ -159,38 +159,40 @@ output$print_name_rdf <- renderPrint({
 }) 
 ######### zoteroData function #######
 zoteroData <- reactive ({
-  if (is.null(input$file.rdf))  { return() }
- # if ((is.null(input$directory)) || (is.na(input$directory)))  { return() }
-  uris.name <-  input$file.rdf$datapath
-
-  # dir<-input$directory
-  #zot.pdf <-  zotero(uris.name)
-  zot.pdf <-  zotero_rdf(uris.name) #xml parsing - list of articles and sublist of 5: title, abstract,date,surname, firstname,link,type,path
-  # dir.list <- list()
-  dir.list <- vector()
-  title.list <- vector()
-  k=1
-  for (i in 1:length(zot.pdf)) {
-   # if (zot.pdf[i]!="") {
-    if (!is.na(zot.pdf[[i]][1])) {
-      article <- zot.pdf[[i]]
-     # text <- zot.pdf[i]
-      #path <- paste0(dir,text)
-      #path <- paste0("/Users/olgascrivner/Documents/ITMS/Summer2017/TestingFiles/",text)
-      path <- article[8] # file path
-      dir.list[k] <- path
-      title <- article[1]
-      title.list[k] <- title
-      k <- k+1
-    }
-  }
+ #  if (is.null(input$file.rdf))  { return() }
+ # # if ((is.null(input$directory)) || (is.na(input$directory)))  { return() }
+ #  uris.name <-  input$file.rdf$datapath
+ # 
+ #  # dir<-input$directory
+ #  #zot.pdf <-  zotero(uris.name)
+ #  zot.pdf <-  zotero_rdf(uris.name) #xml parsing - list of articles and sublist of 5: title, abstract,date,surname, firstname,link,type,path
+ #  # dir.list <- list()
+ #  dir.list <- vector()
+ #  title.list <- vector()
+ #  k=1
+ #  for (i in 1:length(zot.pdf)) {
+ #   # if (zot.pdf[i]!="") {
+ #    if (!is.na(zot.pdf[[i]][1])) {
+ #      article <- zot.pdf[[i]]
+ #     # text <- zot.pdf[i]
+ #      #path <- paste0(dir,text)
+ #      #path <- paste0("/Users/olgascrivner/Documents/ITMS/Summer2017/TestingFiles/",text)
+ #      path <- article[8] # file path
+ #      dir.list[k] <- path
+ #      title <- article[1]
+ #      title.list[k] <- title
+ #      k <- k+1
+ #    }
+ #  }
  # extractPdfZotero
 #  texts <- extractPdfZotero(dir.list)
 
  # texts <- extractPdfZotero(dir.list,zot.pdf)
-  texts <- extractPdfZotero(zot.pdf) # list of extracted articles with sublist of titles, abstracts, authors, datetimes, text.extracts
-  withProgress(message = 'Preprocessing Zotero',
-               detail = 'It may take a while...', value = 0, {
+
+  texts <- zoteropdf
+  #texts <- extractPdfZotero(zot.pdf) # list of extracted articles with sublist of titles, abstracts, authors, datetimes, text.extracts
+  withProgress(message = 'Loading Corpus',
+               detail = 'Almost done...', value = 0, {
                  for (i in 1:15) {
                    incProgress(1/15)
                    Sys.sleep(0.25)
@@ -199,9 +201,9 @@ zoteroData <- reactive ({
   # zot.data <-  extractZoteroTxt(uris.name)
  # info <- list(zot.pdf=zot.pdf,dir.list=dir.list)
 #  print(texts)
-  info <- list(zot.pdf=zot.pdf,texts=texts, title.list=title.list, dir.list=dir.list)
-  return(info)
- # return(zot.data)
+#  info <- list(zot.pdf=zot.pdf,texts=texts, title.list=title.list, dir.list=dir.list)
+ # return(info)
+  return(texts)
 })
 
 output$zotero_term <-renderUI ({
@@ -246,12 +248,12 @@ output$zotero_slider <- renderUI({
 })
 #######extractZoteroTerm function ####
 extractZoteroTerm <- reactive ({
-  if (is.null(input$file.rdf))  { return() }
+ # if (is.null(input$file.rdf))  { return() }
  # if (is.null(zotero_keywords1_submitted()) &is.null(zotero_keywords2_submitted())) { return() }
   #z <- zoteroData()$texts
-  zot_data <- zoteroData()$texts#[[5]]#[[4]]
+  zot_data <- zoteroData()#$texts#[[5]]#[[4]]
  # links_pdf <- zoteroData()$dir.list#zot.pdf
-  dir.list <- zoteroData()$dir.list
+ ## dir.list <- zoteroData()$dir.list
  # z <- zoteroData()$texts[[5]]#zoteroData()$zot.pdf#dir.list
  # author <-zoteroData()$texts[[2]]
  # title <- zoteroData()$texts[[1]]
@@ -259,12 +261,12 @@ extractZoteroTerm <- reactive ({
  # query1 <- gsub("\\s+", "",zotero_keywords1_submitted())
  # query2 <- gsub("\\s+", "",zotero_keywords2_submitted())
  # condition <- "and"
-  if (!is.null(zotero_keywords_submitted())) {
+ # if (!is.null(zotero_keywords_submitted())) {
     query <- gsub("\\s+", " ", tolower(zotero_keywords_submitted()))
     query1  <- unlist(strsplit(query," "))[1]
     query2 <- unlist(strsplit(query," "))[3]
     condition <- unlist(strsplit(query," "))[2]
-  }
+ # }
  # if (!is.null( zotero_keywords2_submitted()) ) {
    # query1 <- gsub("\\s+", " ", zotero_keywords1_submitted())
 
@@ -283,6 +285,13 @@ extractZoteroTerm <- reactive ({
   #extract <- zoteroData()$texts  #
  # extract <- extractZotero(links_pdf,query,query2,len,path)#, words)#p1,p2)
  # extract <- extractZoteroTxt(zot_data,query,query2,len, dir.list)
+  withProgress(message = 'Extracting Terms',
+               detail = 'Almost done...', value = 0, {
+                 for (i in 1:15) {
+                   incProgress(1/15)
+                   Sys.sleep(0.25)
+                 }
+               })
   extract <- extractZoteroTxt(zot_data,query1,query2,condition,len,between)
   withProgress(message = 'Extracting Terms',
                detail = 'Almost done...', value = 0, {
@@ -294,27 +303,36 @@ extractZoteroTerm <- reactive ({
   return(extract) # list of 5 text.extract, titles, datetimes,authors, abstracts
 })
 
+### collection ####
+
+
 ########print_content_rdf ######
 output$print_content_rdf <- renderUI({
-  if (is.null(input$file.rdf))  { return() }
-  txt.lines <- extractZoteroTerm()[[1]]#$titles#zoteroData()$dir.list #directory()
- # txt.lines <- zoteroData()$dir.list#extractZoteroTerm()$titles#zoteroData()$dir.list #directory()
- # txt.lines <- zoteroData()$title.list#texts[[1]]#[[2]]#extractZoteroTerm()$text.extract
-  HTML(paste("<br/>", txt.lines, sep="<br/>"))
+ # if (is.null(input$file.rdf))  { return() }
+  txt.lines <- extractZoteroTerm()[[3]]#$titles#zoteroData()$dir.list #directory()
+ # txt.lines <- zoteroData()[[1]]#$dir.list#extractZoteroTerm()$titles#zoteroData()$dir.list #directory()
+ # txt.lines <- mycollection()$corpus[[1]]
+  # txt.lines <- zoteroData()$title.list#texts[[1]]#[[2]]#extractZoteroTerm()$text.extract
+  HTML(paste("<br/>", "Num of Extracted documents: ",length(txt.lines), sep="<br/>"))
 }) 
 ##########zotero_content function ########
 zotero_content <- reactive({
-  if (is.null(input$file.rdf))  { return() }
-  txt.lines <- extractZoteroTerm()$text.extract#extractZoteroTerm()[[1]]
- # txt.lines <-zoteroData()$texts
+ # if (is.null(input$file.rdf))  { return() }
+ # txt.lines <- extractZoteroTerm()$text.extract#extractZoteroTerm()[[1]]
+ # if (!is.null(zotero_keywords_submitted())) {
+ # txt.lines <-extractZoteroTerm()[[3]]#$texts
+ # }
+  txt.lines <-zoteroData()[[1]]#$texts
    # extractZoteroTerm()$text.extract# zoteroData()$texts[[5]]#extractZoteroTerm()
   return(txt.lines)
 })
 
+### print zotero viewer ####
 output$print_zotero <- renderUI({
-  if (is.null(input$file.rdf))  { return() }
+ # if (is.null(input$file.rdf))  { return() }
   txt.lines <- zotero_content()
-  HTML(paste("<br/>", "Document: ",txt.lines, sep="<br/>"))
+ # HTML(paste("<br/>", "Document: ",txt.lines, sep="<br/>"))
+  HTML(paste("<br/>", txt.lines, sep="<br/>"))
 })
 
 output$choose_length <- renderUI({
@@ -330,21 +348,30 @@ output$choose_length <- renderUI({
 ListTerms <- reactive({
  # if ((is.null(input$file.article)) && (is.null(input$file.article.txt)) && (is.null(structured_data())) &&(is.null(input$file.rdf)) && (is.null(input$file.tag)))   { return() } 
   
-  if(!is.null(input$file.article)) {
-    corpus.lda <- ExtractRawContentPDF()#Selection()#$text.extract
-  }
-  else if(!is.null(input$file.article.txt))  {
-    corpus.lda <- ExtractRawContentTXT()#extractContent(input$file.article.txt) 
-  }
-  else if (!is.null(input$file.rdf))  {
-    corpus.lda <- zotero_content()#extractZoteroTerm()#$text.extract
-  }
-  else if (!is.null(input$file.tag))  {
-    corpus.lda <- selectPos()
-  }
-  else if (!is.null(structured_data()))  {
-    corpus.lda <- structured_data()$corpus
-  }
+ # if(!is.null(input$file.article)) {
+   # corpus.lda <- ExtractRawContentPDF()#Selection()#$text.extract
+ # }
+ # else if(!is.null(input$file.article.txt))  {
+ #   corpus.lda <- ExtractRawContentTXT()#extractContent(input$file.article.txt) 
+#  }
+  #else if (!is.null(input$file.rdf))  {
+ # if(input$category =='all') {
+ #   corpus.lda <- zoteroData()[[5]]
+ # } 
+ # else if (input$category =='macro')  {
+ #   corpus.lda <- extractZoteroTerm()[[1]]
+#}
+#else if (input$category =='micro')  {
+    corpus.lda <- extractZoteroTerm()[[2]]
+#}
+      #zotero_content()#extractZoteroTerm()#$text.extract
+ # }
+ # else if (!is.null(input$file.tag))  {
+  #  corpus.lda <- selectPos()
+ # }
+ # else if (!is.null(structured_data()))  {
+  #  corpus.lda <- structured_data()$corpus
+ # }
   listTerms(corpus.lda)
 })  
 
@@ -396,23 +423,23 @@ output$place_for_file_browser <- renderUI({
 ######### fileData metafunction #########
 fileData <- reactive({ # loading data
   my_data = NULL
-  if( !is.null(input$csv_file_name) ) {
-    my_data <- read.csv(input$csv_file_name$datapath, header=input$header, sep=input$sep, quote=input$quote)
-  }
-  else if( !is.null(input$json_file_name) ) {
-    my_data <- fromJSON(input$json_file_name$datapath, flatten = TRUE)
-  }
-  else if( !is.null(input$xml_file_name) ) {
-    my_data <- xmlToDataFrame(input$xml_file_name$datapath)
-  }
-  else if( !is.null(input$file.article)) {
-    a <- metadataPdf()$authors
-    t <- metadataPdf()$titles
-    dt <- metadataPdf()$datetimes
-    my_data <- data.frame(date=dt, title=t, author = a)
+#  if( !is.null(input$csv_file_name) ) {
+#    my_data <- read.csv(input$csv_file_name$datapath, header=input$header, sep=input$sep, quote=input$quote)
+#  }
+# else if( !is.null(input$json_file_name) ) {
+#    my_data <- fromJSON(input$json_file_name$datapath, flatten = TRUE)
+#  }
+#  else if( !is.null(input$xml_file_name) ) {
+ #   my_data <- xmlToDataFrame(input$xml_file_name$datapath)
+ # }
+ # else if( !is.null(input$file.article)) {
+ #   a <- metadataPdf()$authors
+ #   t <- metadataPdf()$titles
+ #   dt <- metadataPdf()$datetimes
+ #   my_data <- data.frame(date=dt, title=t, author = a)
     # my_data <- data.frame(metadataPdf()$metapdf)
-  }
-  else if (!is.null(input$file.rdf)) {
+ # }
+ # else if (!is.null(input$file.rdf)) {
    # a <- 4#$authors
    # t <- 2#$titles
    # dt <- 3
@@ -423,7 +450,7 @@ fileData <- reactive({ # loading data
     t <- extractZoteroTerm()$titles#zoteroData()$texts[[1]]
     dt <- gsub("[a-zA-Z]* ","", extractZoteroTerm()$datetimes)#zoteroData()$texts[[3]]
     my_data <- data.frame(date=dt, title=t, author = a)
-  }
+ # }
   #else if( !is.null(input$structured_data_file_json) ) {
   #  parsed_json <- parseJSON(structured_data())
   #  my_data <- data.frame(date=parsed_json$dates, title=parsed_json$titles, author = parsed_json$authors)
@@ -433,7 +460,7 @@ fileData <- reactive({ # loading data
 #########zotero_metadata_table #######
 output$zotero_metadata_table <- renderDataTable({
  # if (is.null(input$file.rdf)){ return() }
-  if (is.null(input$file.rdf)){ return() }
+ # if (is.null(input$file.rdf)){ return() }
    a <- extractZoteroTerm()[[4]]#$authors
    t <- extractZoteroTerm()[[2]]#$titles
    dt <- extractZoteroTerm()[[3]]#$datetimes
@@ -491,8 +518,185 @@ output$print_abstract <- renderUI({
   HTML(paste("<br/>", "Document: ",pdf.abstract, sep="<br/>"))
 }) 
 
+ 
+
+### Pre-Processing
+######### PreprocessingSteps function ######
+
+PreprocessingSteps <- reactive({
+ # if ((is.null(input$file.article)) && (is.null(input$file.article.txt)) && (is.null(structured_data())) && (is.null(input$file.tag))&& (is.null(input$file.rdf))) { return() }
+# if (is.null(input$file.rdf) && (is.null(structured_data()))) {
+ #  if(!is.null(input$file.article)) {
+  #  if(input$article_content=="Full Text"){
+   #   x <- ExtractRawContentPDF()
+   # }
+  #  else if(input$article_content=="Abstract"){
+   #   x <- Abstract()
+  #  } 
+  #  y <- input$file.article
+ # }
+ # else if(!is.null(input$file.article.txt)) {
+ #   x <- ExtractRawContentTXT()
+ #   y <- input$file.article.txt
+ # }
+  # else if(!is.null(structured_data())) {
+  #   # parsed_json = parseJSON(structured_data())
+  #   x <- structured_data()$corpus
+  #   y <- list(name = structured_data()$titles, size = 0, type = "", datapath = "")
+  # }
+ # else if (!is.null(input$file.tag)) {
+ # x <- selectPos()
+#  y <- input$file.tag
+#  }
+ #   remove_urls <-input$remove_urls
+ #   remove_references<-input$remove_references
+ #   remove_html<-input$remove_html
+ #   lower_case<-input$lower_case
+ #   remove_numbers<-input$remove_numbers
+ #   exceptions<-input$exceptions
+ #   remove_punctuation <- input$remove_punctuation
+ #   mylist<-tokenize(x,y,remove_urls,remove_references,remove_punctuation,
+ #                    remove_html,lower_case,remove_numbers,exceptions)
+ #}
+ # else  {
+   # if(!is.null(structured_data())) {
+   #   x <- structured_data()$corpus
+   #   y <- structured_data()$titles
+   # }
+
+ # x <- zoteroData()[[5]]
+ # y <- zoteroData()[[1]]
+  if (input$category=='micro'){
+  x <- unlist(extractZoteroTerm()[[2]])#$text.extract #extractZoteroTerm()$text.extract#zotero_content()#extractZoteroTerm()$text.extract
+ # print(length(x))
+ # y <- extractZoteroTerm()#$titles#[[3]]
+  }
+  else if (input$category=='macro'){
+    x <- zoteroData()[[5]]
+    print(length(x))
+    
+  }
+ # print(length(y))
+  # zoteroData()$texts[[1]]#extractZoteroTerm()$titles#extractZoteroTerm()$titles
+
+  #  if (input$category=='all') {
+   #   x <- zoteroData()[[5]] #extractZoteroTerm()$text.extract#zotero_content()#extractZoteroTerm()$text.extract
+  #    y <- zoteroData()[[1]]
+  #  } 
+ # else if (input$category =='macro')  {
+  #  x <- extractZoteroTerm()[[1]] #extractZoteroTerm()$text.extract#zotero_content()#extractZoteroTerm()$text.extract
+  #  y <- extractZoteroTerm()[[3]]
+ # }
+ # else if (input$category =='micro')  {
+  #  x <- extractZoteroTerm()[[2]] #extractZoteroTerm()$text.extract#zotero_content()#extractZoteroTerm()$text.extract
+ #   y <- extractZoteroTerm()[[3]]
+       # zoteroData()$texts[[1]]#extractZoteroTerm()$titles#extractZoteroTerm()$titles
+  #  }
+
+
+    remove_urls <-input$remove_urls
+    remove_references<-input$remove_references
+    remove_html<-input$remove_html
+    lower_case<-input$lower_case
+    remove_numbers<-input$remove_numbers
+    exceptions<-input$exceptions
+    remove_punctuation <- input$remove_punctuation
+   # mylist<-tokenize(x,y,remove_urls,remove_references,remove_punctuation,
+    #                remove_html,lower_case,remove_numbers,exceptions)
+    
+    text.extraction <- list()
+    lda.format <- list()  
+    # novel.list <- list()
+    punct.list <-list()
+    # novel.lda <- list()
+    # print(length(y))
+    num<-length(x)
+   # print(class(x))
+  #  print(x)
+    # i <- 1
+    # file.names <-y$name
+    for (i in 1:num) {
+      data<- x[i]
+      # print(i)
+      # data<- text.extract[1]
+      text <- paste(data, collapse = " ")
+     # print(text)
+      text.punct <- data
+      # print(i)
+      if (remove_urls==TRUE) {
+        text.punct <- rm_email(text.punct)
+        text.punct <- rm_url(text.punct)
+        text.punct <- rm_twitter_url(text.punct)
+      } else {text.punct <- text.punct}
+      
+      if (remove_references==TRUE) {
+        text.punct <-rm_citation(text.punct)
+        text.punct <-rm_citation(text.punct, pattern="@rm_citation3")
+        text.punct <-rm_citation(text.punct, pattern="@rm_citation2")
+        text.punct <-rm_round(text.punct)
+        text.punct <-rm_curly(text.punct)
+        text.punct <-rm_square(text.punct)
+        text.split<-strsplit(text.punct, "References|references|REFERENCES")
+        #text.split <- unlist(text.p)
+        text.punct<-text.split[[1]]
+      } else {text.punct <- text.punct}
+      
+      if (remove_html==TRUE) {
+        text.punct <- rm_bracket(text.punct)
+      } else {text.punct <- text.punct}
+      
+      if (lower_case==TRUE) {
+        text.punct <- tolower(text.punct)
+      } else {text.punct <- text.punct}
+      
+      if (remove_numbers==TRUE) {
+        text.punct<-  gsub('[[:digit:]]+', '', text.punct)
+      } else {text.punct <- text.punct}
+      
+      if (remove_punctuation==TRUE) {
+        if (exceptions=="Keep apostrophe") {
+          text.punct <- gsub("-", " ", text.punct) 
+          text.punct <- strip(text.punct, char.keep="~~",digit.remove = FALSE, apostrophe.remove = FALSE,
+                              lower.case = FALSE)
+        }
+        else if (exceptions=="Keep hyphen") {
+          text.punct <- strip(text.punct, char.keep="-",digit.remove = FALSE, apostrophe.remove = FALSE,
+                              lower.case = FALSE)
+        }
+        else if (exceptions=="Keep apostrophe and hyphen") {
+          text.punct <- strip(text.punct, char.keep="-",digit.remove = FALSE, apostrophe.remove = FALSE,
+                              lower.case = FALSE)}
+        else if (exceptions=="No exceptions") {
+          text.punct <- gsub("[^[:alnum:] ]", "", text.punct) }#{text.punct <- gsub("[^[:alnum:] ]", "", text.punct)}
+      }else {text.punct <- text.punct}
+      
+      text.punct <- gsub("\\s\\s+"," ",text.punct)
+      text.punct <- str_c(text.punct)
+      text.punct<- str_trim(text.punct)  
+      text.split<-strsplit(text.punct, " ")
+      text.split <- unlist(text.split)
+      data.del <- gsub("[A-Za-z0-9]"," \\1", data)
+      data.del.w <- paste(data.del, collapse = " ")
+      data.no.punct<- gsub("([!¿?;,¡:]|(\\.+))", " \\1 ", data.del.w)
+      data.no.punct <-  gsub("\\s+"," ",data.no.punct)
+      # file.name <- sub("(.*\\/)([^.]+)(\\.[[:alnum:]]+$)", "\\2", file.names[i])#input$file.article.txt$name[i])   
+      # text.split<-strsplit(text.punct, " ")
+      # text.split <- unlist(text.split)
+      #  text.freq <- table(text.split)
+      #  text.relative <- 100*(text.freq/sum(text.freq))
+      # novel.list[[file.name]] <- text.relative
+      # novel.list = ""
+      punct.list[[i]] <-data.no.punct
+      #  novel.lda[i] <-text.punct
+      lda.format[[i]] <- text.punct
+      text.extraction[[i]] <- text
+    }
+    info <- list(text.extraction, punct.list,lda.format)
+    return(info)
+})
+
 output$print_preprocessed <- renderUI({
-  if ((is.null(input$file.article)) && (is.null(input$file.article.txt)) && (is.null(structured_data())) && (is.null(input$file.tag))&& (is.null(input$file.rdf))) { return() }
+  # if ((is.null(input$file.article)) && (is.null(input$file.article.txt)) && (is.null(structured_data())) && (is.null(input$file.tag))&& (is.null(input$file.rdf))) { return() }
   if (input$preprocessing=="No Changes") {
     pdf.lines <- "No pre-processing steps are applied"
   }
@@ -504,74 +708,11 @@ output$print_preprocessed <- renderUI({
                      Sys.sleep(0.25)
                    }
                  })
-    pdf.lines <- PreprocessingSteps()[6]#$lda.format#window.one()$lda.format
-    pdf.lines <- unlist(pdf.lines)
+    pdf.lines <- PreprocessingSteps()[[3]]#$lda.format#PreprocessingSteps()[6]#$lda.format#window.one()$lda.format
+     pdf.lines <- unlist(pdf.lines)
   }
   HTML(paste("<br/>", "Document: ",pdf.lines, sep="<br/>"))
 }) 
-  
-
-### Pre-Processing
-######### PreprocessingSteps function ######
-
-PreprocessingSteps <- reactive ({
- # if ((is.null(input$file.article)) && (is.null(input$file.article.txt)) && (is.null(structured_data())) && (is.null(input$file.tag))&& (is.null(input$file.rdf))) { return() }
- if (is.null(input$file.rdf) && (is.null(structured_data()))) {
-   if(!is.null(input$file.article)) {
-    if(input$article_content=="Full Text"){
-      x <- ExtractRawContentPDF()
-    }
-    else if(input$article_content=="Abstract"){
-      x <- Abstract()
-    } 
-    y <- input$file.article
-  }
-  else if(!is.null(input$file.article.txt)) {
-    x <- ExtractRawContentTXT()
-    y <- input$file.article.txt
-  }
-  # else if(!is.null(structured_data())) {
-  #   # parsed_json = parseJSON(structured_data())
-  #   x <- structured_data()$corpus
-  #   y <- list(name = structured_data()$titles, size = 0, type = "", datapath = "")
-  # }
-  else if (!is.null(input$file.tag)) {
-  x <- selectPos()
-  y <- input$file.tag
-  }
-    remove_urls <-input$remove_urls
-    remove_references<-input$remove_references
-    remove_html<-input$remove_html
-    lower_case<-input$lower_case
-    remove_numbers<-input$remove_numbers
-    exceptions<-input$exceptions
-    remove_punctuation <- input$remove_punctuation
-    mylist<-tokenize(x,y,remove_urls,remove_references,remove_punctuation,
-                     remove_html,lower_case,remove_numbers,exceptions)
- }
-  else  {
-    if(!is.null(structured_data())) {
-      x <- structured_data()$corpus
-      y <- structured_data()$titles
-    }
-    else if (!is.null(input$file.rdf)) {
-      x <- zotero_content() #extractZoteroTerm()$text.extract#zotero_content()#extractZoteroTerm()$text.extract
-      y <- extractZoteroTerm()$titles
-       # zoteroData()$texts[[1]]#extractZoteroTerm()$titles#extractZoteroTerm()$titles
-    }
-    remove_urls <-input$remove_urls
-    remove_references<-input$remove_references
-    remove_html<-input$remove_html
-    lower_case<-input$lower_case
-    remove_numbers<-input$remove_numbers
-    exceptions<-input$exceptions
-    remove_punctuation <- input$remove_punctuation
-    mylist<-tokenizeRdf(x,y,remove_urls,remove_references,remove_punctuation,
-                     remove_html,lower_case,remove_numbers,exceptions)
-  }
-  return(mylist)
-})
-
 
 ##### STOP WORDS 
 #############stopWordsTxt function ######
@@ -600,11 +741,11 @@ output$print_stopwords <- renderPrint({
 })
 #########RemoveWordsStepOne #########
 #Allows for interactive instant word removals from user
-RemoveWordsStepOne <-reactive({
+RemoveWordsStepOne <- reactive({
  # if ((is.null(input$file.article)) && (is.null(input$file.article.txt)) && (is.null(structured_data()))&&(is.null(input$file.tag)) &&(is.null(input$file.rdf))) { return() }
   #cutoff.lower=0#input$cutoff_lower
   #cutoff.high=input$cutoff_high
-  mycorpus <- PreprocessingSteps()[6]
+   mycorpus <- unlist(PreprocessingSteps()[[3]])#$lda.format#[[3]]#[[5]]
   if  (input$stops=="None") {    
     doc.vect <- VectorSource(mycorpus)
     corpus.tm <-Corpus(doc.vect)
@@ -717,21 +858,21 @@ RemoveWordsStepTwo <-reactive({
   tdm <- TermDocumentMatrix(docs)
   dtm <- DocumentTermMatrix(docs)
   term.matrix <- as.matrix(tdm)
-  if(!is.null(input$file.article)) {
-    file.names <-input$file.article$name
-  }
-  if(!is.null(input$file.article.txt))  {
-    file.names <-input$file.article.txt$name
-  }
-  if(!is.null(structured_data()))  {
-    file.names <-  structured_data()$titles
-  }
-  if(!is.null(input$file.tag))  {
-    file.names <-  input$file.tag$name
-  }
-  if(!is.null(input$file.rdf)) {
+ # if(!is.null(input$file.article)) {
+ #   file.names <-input$file.article$name
+#  }
+ # if(!is.null(input$file.article.txt))  {
+ #   file.names <-input$file.article.txt$name
+#  }
+ # if(!is.null(structured_data()))  {
+ #   file.names <-  structured_data()$titles
+ # }
+ # if(!is.null(input$file.tag))  {
+ #   file.names <-  input$file.tag$name
+ # }
+ # if(!is.null(input$file.rdf)) {
     file.names <- extractZoteroTerm()$titles#zoteroData()$texts[[1]]#extractZoteroTerm()$titles
-  }
+ # }
   colnames(term.matrix) <- file.names
   corpus.paste <-paste(corpus, sep=" ")
   corpus.paste <- str_c(corpus.paste)
@@ -788,40 +929,40 @@ stemming <- reactive ({
 })
 
 output$print_stemmer <- renderUI({
-  if ((is.null(input$file.article)) && (is.null(input$file.article.txt)) && (is.null(structured_data()))&& (is.null(input$file.tag))&&(is.null(input$file.rdf))) { return() }
+ # if ((is.null(input$file.article)) && (is.null(input$file.article.txt)) && (is.null(structured_data()))&& (is.null(input$file.tag))&&(is.null(input$file.rdf))) { return() }
   # if (is.null(input$remove_manual)) { return() }
   HTML(paste0(stemming()))
 })
 #########rawfrequency###########
 rawFrequency <- reactive ({
-  if ((is.null(input$file.article)) && (is.null(input$file.article.txt)) && (is.null(structured_data()))&& (is.null(input$file.tag))&&(is.null(input$file.rdf))) { return() }
-  if(!is.null(input$file.article)) {
-    x <-ExtractRawContentPDF()
-  }
-  else if(!is.null(input$file.article.txt)) {
-    x<- ExtractRawContentTXT()
-  }
-  else if(!is.null(input$file.tag)) {
-    x <-selectPos()
-  }
-  else if(!is.null(input$file.rdf)) {
+ # if ((is.null(input$file.article)) && (is.null(input$file.article.txt)) && (is.null(structured_data()))&& (is.null(input$file.tag))&&(is.null(input$file.rdf))) { return() }
+ # if(!is.null(input$file.article)) {
+ #   x <-ExtractRawContentPDF()
+ # }
+ # else if(!is.null(input$file.article.txt)) {
+ #   x<- ExtractRawContentTXT()
+ # }
+#  else if(!is.null(input$file.tag)) {
+#    x <-selectPos()
+#  }
+ # else if(!is.null(input$file.rdf)) {
     x<-zotero_content()#extractZoteroTerm()$text.extract
-  }
-  else if(!is.null(is.null(structured_data()))) {
-    x <-structured_data()$corpus
-  }
+ # }
+ # else if(!is.null(is.null(structured_data()))) {
+ #   x <-structured_data()$corpus
+ # }
   d <-frequencyTable(x)
   return(d)
 })
 
 output$freq <- renderDataTable ({
-  if ((is.null(input$file.article)) && (is.null(input$file.article.txt)) && (is.null(structured_data())) && (is.null(input$file.tag))&&(is.null(input$file.rdf))) { return() }
+ # if ((is.null(input$file.article)) && (is.null(input$file.article.txt)) && (is.null(structured_data())) && (is.null(input$file.tag))&&(is.null(input$file.rdf))) { return() }
   d<-rawFrequency()$dataf#ListTerms()$d#rawFrequency()$dataf
   return(d)#,options=list(lengthMenu = c(5, 10, 15), pageLength = 5))
 })
 
 output$zipf <- renderPlot ({
-  if ((is.null(input$file.article)) && (is.null(input$file.article.txt)) && (is.null(structured_data()))&& (is.null(input$file.tag))&&(is.null(input$file.rdf))) { return() }
+ # if ((is.null(input$file.article)) && (is.null(input$file.article.txt)) && (is.null(structured_data()))&& (is.null(input$file.tag))&&(is.null(input$file.rdf))) { return() }
   tdm <- ListTerms()$tdm
   dtm <- ListTerms()$dtm
   p<- Zipf_plot(dtm, type="l")
@@ -838,22 +979,22 @@ output$zipf <- renderPlot ({
 
 
 output$choose_text <- renderUI({
-  if ((is.null(input$file.article)) && (is.null(input$file.article.txt)) && (is.null(structured_data()))&& (is.null(input$file.tag))&&(is.null(input$file.rdf))) { return() }
-  if (!is.null(input$file.article)) {
-    names <- input$file.article$name
-  }
-  if (!is.null(input$file.article.txt)) {
-    names <- input$file.article.txt$name
-  }
-  if (!is.null(input$file.tag)) {
-    names <-input$file.tag$name
-  }
-  if (!is.null(structured_data())) {
-  names <- structured_data()$titles
-  }
-  if (!is.null(input$file.rdf)) {
+#  if ((is.null(input$file.article)) && (is.null(input$file.article.txt)) && (is.null(structured_data()))&& (is.null(input$file.tag))&&(is.null(input$file.rdf))) { return() }
+ # if (!is.null(input$file.article)) {
+ #   names <- input$file.article$name
+ # }
+ # if (!is.null(input$file.article.txt)) {
+ #   names <- input$file.article.txt$name
+ # }
+#  if (!is.null(input$file.tag)) {
+ #   names <-input$file.tag$name
+ # }
+#  if (!is.null(structured_data())) {
+#  names <- structured_data()$titles
+#  }
+  #if (!is.null(input$file.rdf)) {
     names <- extractZoteroTerm()$titles
-  }
+ # }
   selectizeInput("show_text", label = "Select which document to analyze", 
                  choices = names,
                  selected=FALSE,
@@ -878,7 +1019,7 @@ output$choose_top <- renderUI({
 }) 
 
 output$choose_remove <- renderUI({
-  if ((is.null(input$file.article)) && (is.null(input$file.article.txt)) && (is.null(structured_data())) && (is.null(input$file.tag))&&(is.null(input$file.rdf))) { return() }
+ # if ((is.null(input$file.article)) && (is.null(input$file.article.txt)) && (is.null(structured_data())) && (is.null(input$file.tag))&&(is.null(input$file.rdf))) { return() }
   word <- RemoveWordsStepOne()$d[[2]]
   selectizeInput("remove_words", label = "Select words to be removed", 
                  choices = word,
@@ -889,14 +1030,14 @@ output$choose_remove <- renderUI({
 })
 
 output$printWords <- renderUI({
-  if ((is.null(input$file.article)) && (is.null(input$file.article.txt)) && (is.null(structured_data()))&& (is.null(input$file.tag))&&(is.null(input$file.rdf))) { return() }
+  #if ((is.null(input$file.article)) && (is.null(input$file.article.txt)) && (is.null(structured_data()))&& (is.null(input$file.tag))&&(is.null(input$file.rdf))) { return() }
   # if (is.null(input$remove_manual)) { return() }
   HTML(paste0(RemoveWordsStepOne()$d[[2]]))
   # HTML(paste0(RemoveWordsStepTwo()$words.list))#PreprocessingSteps()$lda.format))# RemoveWordsNew()$corpus.lda))
 })
 
 output$word_count <- renderPlot({
-  if ((is.null(input$file.article)) && (is.null(input$file.article.txt)) && (is.null(structured_data()))&& (is.null(input$file.tag))&&(is.null(input$file.rdf))) { return() }
+ # if ((is.null(input$file.article)) && (is.null(input$file.article.txt)) && (is.null(structured_data()))&& (is.null(input$file.tag))&&(is.null(input$file.rdf))) { return() }
   x <- input$top
   #  word <- RemoveWordsNew()$d[[2]][1:x]
   #  frequency <- RemoveWordsNew()$d[[1]][1:x]
@@ -926,7 +1067,7 @@ output$choose_max_words <- renderUI({
 })
 #########print_cloud########
 output$print_cloud <-renderPlot({
-  if ((is.null(input$file.article)) && (is.null(input$file.article.txt)) && (is.null(structured_data()))&& (is.null(input$file.tag))&&(is.null(input$file.rdf))) { return() }
+ # if ((is.null(input$file.article)) && (is.null(input$file.article.txt)) && (is.null(structured_data()))&& (is.null(input$file.tag))&&(is.null(input$file.rdf))) { return() }
   wordcloud_rep <- repeatable(wordcloud)
   font <- input$font
   
@@ -1053,23 +1194,23 @@ output$eta <- renderUI({
 
 #######chronology########
 chronology <- reactive ({
-  if ((is.null(input$file.article)) && (is.null(input$file.article.txt)) && (is.null(structured_data()))&&(is.null(input$file.tag))&&(is.null(input$file.rdf))) { return() }
+ # if ((is.null(input$file.article)) && (is.null(input$file.article.txt)) && (is.null(structured_data()))&&(is.null(input$file.tag))&&(is.null(input$file.rdf))) { return() }
   if( input$metadata_source == "None") {return()}
  # if((is.null(input$chronology)) ||(input$chronology=="None")) { return() }
   remove.words.file <- stopWordsTxt()
-  corpus.lda <- PreprocessingSteps()[6]#PreprocessingSteps()$lda.format#window.one()$lda.format 
-  if(!is.null(input$file.article)) {
-    corpus.lda <-  RemoveWordsStepOne()$corpus #PreprocessingSteps()[6]#PreprocessingSteps()$lda.format#window.one()$lda.format
-  }
-  if(!is.null(input$file.article.txt)) {
+  corpus.lda <- PreprocessingSteps()[[3]]#[6]#PreprocessingSteps()$lda.format#window.one()$lda.format 
+ # if(!is.null(input$file.article)) {
+ #   corpus.lda <-  RemoveWordsStepOne()$corpus #PreprocessingSteps()[6]#PreprocessingSteps()$lda.format#window.one()$lda.format
+#  }
+#  if(!is.null(input$file.article.txt)) {
+#    corpus.lda <-  RemoveWordsStepOne()$corpus
+#  }
+#  if(!is.null(input$file.tag)) {
+ #   corpus.lda <-  RemoveWordsStepOne()$corpus
+ # }
+ # if(!is.null(input$file.rdf)) {
     corpus.lda <-  RemoveWordsStepOne()$corpus
-  }
-  if(!is.null(input$file.tag)) {
-    corpus.lda <-  RemoveWordsStepOne()$corpus
-  }
-  if(!is.null(input$file.rdf)) {
-    corpus.lda <-  RemoveWordsStepOne()$corpus
-  }
+ # }
   
   corpus.lda <- removeWords(corpus.lda, remove.words.file)
   corpus.lda <- removeWords(corpus.lda, c(input$remove_words))
@@ -1110,12 +1251,12 @@ chronology <- reactive ({
 })
 
 output$chronology_top <- renderPrint ({
-  if ((is.null(input$file.article)) && (is.null(input$file.article.txt)) && (is.null(structured_data()))&&(is.null(input$file.tag))&&(is.null(input$file.rdf))) { return() }
+ # if ((is.null(input$file.article)) && (is.null(input$file.article.txt)) && (is.null(structured_data()))&&(is.null(input$file.tag))&&(is.null(input$file.rdf))) { return() }
  # if((input$chronology=="None") || (is.null(input$chronology))) { return() }
   chronology()$term
 })
 output$chronology_plot <- renderPlot ({
-  if ((is.null(input$file.article)) && (is.null(input$file.article.txt)) && (is.null(structured_data()))&&(is.null(input$file.tag))&&(is.null(input$file.rdf))) { return() }
+ # if ((is.null(input$file.article)) && (is.null(input$file.article.txt)) && (is.null(structured_data()))&&(is.null(input$file.tag))&&(is.null(input$file.rdf))) { return() }
 #  if((input$chronology=="None") || (is.null(input$chronology))) { return() }
   dft<-chronology()$M
   #  terms <- chronology()$term
@@ -1125,7 +1266,7 @@ output$chronology_plot <- renderPlot ({
   return(g)
 })
 output$chronology_table <- renderTable ({
-  if ((is.null(input$file.article)) && (is.null(input$file.article.txt)) && (is.null(structured_data()))&&(is.null(input$file.tag))&&(is.null(input$file.rdf))) { return() }
+ # if ((is.null(input$file.article)) && (is.null(input$file.article.txt)) && (is.null(structured_data()))&&(is.null(input$file.tag))&&(is.null(input$file.rdf))) { return() }
  # if((input$chronology=="NULL") || (is.null(input$chronology))) { return() }
   dft<-chronology()$M
   # g <- ggplot(dft,aes(x= dft[,2],y=dft[,3]),color=dft[,1])+geom_point()  + geom_density2d(alpha=.2)
@@ -1135,7 +1276,7 @@ output$chronology_table <- renderTable ({
 })
 #######BestK#######
 BestK <- reactive ({
-  if ((is.null(input$file.article)) && (is.null(input$file.article.txt)) && (is.null(structured_data()))&&(is.null(input$file.tag))&&(is.null(input$file.rdf))) { return() }
+ # if ((is.null(input$file.article)) && (is.null(input$file.article.txt)) && (is.null(structured_data()))&&(is.null(input$file.tag))&&(is.null(input$file.rdf))) { return() }
   if((is.null(input$best_num)) || (input$best_num=="NULL")) { return() }
   withProgress(message = 'Calculation in progress',
                detail = 'This may take a while...', value = 0, {
@@ -1147,25 +1288,25 @@ BestK <- reactive ({
   remove.words.file <- stopWordsTxt()
   cutoff.lower=0#input$cutoff_lower
   # cutoff.high=input$cutoff_high
-  if(!is.null(input$file.article)) {
-    novel.vector <- PreprocessingSteps()[6]#PreprocessingSteps()$lda.format#window.one()$lda.format 
+ # if(!is.null(input$file.article)) {
+    novel.vector <- PreprocessingSteps()[[3]]#[6]#PreprocessingSteps()$lda.format#window.one()$lda.format 
     #  novel.vector <- ExtractContentPDF()$lda.format
     # num.documents <- length(ExtractContentPDF()$lda.format)
-    num.documents <- length(PreprocessingSteps()[6])#PreprocessingSteps()$lda.format)#window.one()$lda.format)
-    file.names <- input$file.article$name  
-  }
-  if(!is.null(input$file.article.txt)) {
-    novel.vector <- PreprocessingSteps()[6]#PreprocessingSteps()$lda.format#window.one()$lda.format 
+    num.documents <- length(PreprocessingSteps()[[3]])#[6])#PreprocessingSteps()$lda.format)#window.one()$lda.format)
+    file.names <- extractZoteroTerm()[[1]]#input$file.article$name  
+ # }
+ # if(!is.null(input$file.article.txt)) {
+  #  novel.vector <- PreprocessingSteps()[[3]]#[6]#PreprocessingSteps()$lda.format#window.one()$lda.format 
     # novel.vector <- ExtractContentTXT()$lda.format #novel.list
-    num.documents <- length(PreprocessingSteps()[6])#PreprocessingSteps()$lda.format)#window.one()$lda.format)
-    file.names <- input$file.article.txt$name  
-  }
-  if(!is.null(input$file.tag)) {
-    novel.vector <- PreprocessingSteps()[6]#PreprocessingSteps()$lda.format#window.one()$lda.format 
+  #  num.documents <- length(PreprocessingSteps()[[3]])#[6])#PreprocessingSteps()$lda.format)#window.one()$lda.format)
+  #  file.names <- input$file.article.txt$name  
+ # }
+ # if(!is.null(input$file.tag)) {
+ #   novel.vector <- PreprocessingSteps()[[3]]#[6]#PreprocessingSteps()$lda.format#window.one()$lda.format 
     # novel.vector <- ExtractContentTXT()$lda.format #novel.list
-    num.documents <- length(PreprocessingSteps()[6])#PreprocessingSteps()$lda.format)#window.one()$lda.format)
-    file.names <- input$file.tag$name  
-  }
+ #   num.documents <- length(PreprocessingSteps()[[3]])#[6])#PreprocessingSteps()$lda.format)#window.one()$lda.format)
+ #   file.names <- input$file.tag$name  
+ # }
   novel.vector <- removeWords(novel.vector, remove.words.file)
   novel.vector <- removeWords(novel.vector, c(input$remove_words))
   pdf.corpus <- lexicalize(novel.vector, lower=TRUE)
@@ -1199,7 +1340,7 @@ BestK <- reactive ({
   return(info)
 })
 output$best_k <- renderTable ({
-  if ((is.null(input$file.article)) && (is.null(input$file.article.txt)) && (is.null(structured_data()))&&(is.null(input$file.tag))&&(is.null(input$file.rdf))) { return() }
+ # if ((is.null(input$file.article)) && (is.null(input$file.article.txt)) && (is.null(structured_data()))&&(is.null(input$file.tag))&&(is.null(input$file.rdf))) { return() }
   if((is.null(input$best_num)) || (input$best_num=="NULL")) { return() }
   withProgress(message = 'Calculation in progress',
                detail = 'This may take a while...', value = 0, {
@@ -1214,7 +1355,7 @@ output$best_k <- renderTable ({
   best.model.logLik.df[which.max(best.model.logLik.df$LL),]
 })
 output$best_k_plot <- renderPlot ({
-  if ((is.null(input$file.article)) && (is.null(input$file.article.txt)) && (is.null(structured_data()))&&(is.null(input$file.tag))&&(is.null(input$file.rdf))) { return() }
+ # if ((is.null(input$file.article)) && (is.null(input$file.article.txt)) && (is.null(structured_data()))&&(is.null(input$file.tag))&&(is.null(input$file.rdf))) { return() }
   if((is.null(input$best_num)) || (input$best_num=="NULL")) { return() }
   withProgress(message = 'Plotting in progress',
                detail = 'This may take a while...', value = 0, {
@@ -1227,39 +1368,39 @@ output$best_k_plot <- renderPlot ({
 })
 #########LdaAnalysis########
 LdaAnalysis <- reactive({
-  if ((is.null(input$file.article)) && (is.null(input$file.article.txt)) && (is.null(structured_data()))&&(is.null(input$file.tag))&&(is.null(input$file.rdf))) { return() }
+ # if ((is.null(input$file.article)) && (is.null(input$file.article.txt)) && (is.null(structured_data()))&&(is.null(input$file.tag))&&(is.null(input$file.rdf))) { return() }
   if((is.null(input$lda)) || (input$lda=="None")) { return() }
   set.seed(2013)
   remove.words.file <- stopWordsTxt()
   cutoff.lower=0#input$cutoff_lower
   #cutoff.high=input$cutoff_high
-  if(!is.null(input$file.article)) {
-    corpus.lda <-  RemoveWordsStepOne()$corpus #PreprocessingSteps()[6]#PreprocessingSteps()$lda.format#window.one()$lda.format
+ # if(!is.null(input$file.article)) {
+ #   corpus.lda <-  RemoveWordsStepOne()$corpus #PreprocessingSteps()[6]#PreprocessingSteps()$lda.format#window.one()$lda.format
     #   num.documents <- length(RemoveWordsStepOne()$lda.corpus)#PreprocessingSteps()[6])#PreprocessingSteps()$lda.format)#window.one()$lda.format)
-    n.docs <- as.numeric(length(input$file.article$name))  
-  }
-  if(!is.null(input$file.article.txt)) {
-    corpus.lda <-  RemoveWordsStepOne()$corpus
+ #   n.docs <- as.numeric(length(input$file.article$name))  
+ # }
+ # if(!is.null(input$file.article.txt)) {
+  #  corpus.lda <-  RemoveWordsStepOne()$corpus
     # num.documents <- length(RemoveWordsStepOne()$lda.corpus)
     #corpus.lda <-  window.one()$lda.format
     # num.documents <- length(window.one()$lda.format)
-    n.docs <- as.numeric(length(input$file.article.txt$name))
-  }
-  if(!is.null(input$file.tag)) {
-    corpus.lda <-  RemoveWordsStepOne()$corpus
+ #   n.docs <- as.numeric(length(input$file.article.txt$name))
+ # }
+ # if(!is.null(input$file.tag)) {
+ #   corpus.lda <-  RemoveWordsStepOne()$corpus
     # num.documents <- length(RemoveWordsStepOne()$lda.corpus)
     #corpus.lda <-  window.one()$lda.format
     # num.documents <- length(window.one()$lda.format)
-    n.docs <- as.numeric(length(input$file.tag$name))
-  }
-  if(!is.null(input$file.rdf)) {
+ #   n.docs <- as.numeric(length(input$file.tag$name))
+ # }
+ # if(!is.null(input$file.rdf)) {
     corpus.lda <-  RemoveWordsStepOne()$corpus
-    n.docs <- as.numeric(length(zoteroData()$texts[[1]]))#extractZoteroTerm()$titles))
-  }
-  if(!is.null(structured_data())) {
-    corpus.lda <-  RemoveWordsStepOne()$corpus
-    n.docs <- as.numeric(length(structured_data()$titles))
-  }
+    n.docs <- as.numeric(length(extractZoteroTerm()$titles))#zoteroData()$texts[[1]]))#extractZoteroTerm()$titles))
+  #}
+ # if(!is.null(structured_data())) {
+ #   corpus.lda <-  RemoveWordsStepOne()$corpus
+ #   n.docs <- as.numeric(length(structured_data()$titles))
+ # }
   corpus.lda <- removeWords(corpus.lda, remove.words.file)
   corpus.lda <- removeWords(corpus.lda, c(input$remove_words))
   corpus.lda <- gsub("\\s+"," ",corpus.lda)
@@ -1312,19 +1453,19 @@ LdaAnalysis <- reactive({
 })
 ########topics########
 output$topics <- renderTable({ #renderUI({
-  if ((is.null(input$file.article)) && (is.null(input$file.article.txt)) && (is.null(structured_data()))&&(is.null(input$file.tag))&&(is.null(input$file.rdf))) { return() }
+ # if ((is.null(input$file.article)) && (is.null(input$file.article.txt)) && (is.null(structured_data()))&&(is.null(input$file.tag))&&(is.null(input$file.rdf))) { return() }
   if((is.null(input$lda)) || (input$lda=="None")) { return() }
   LdaAnalysis()$topics
 })
 #######docs#########
 output$docs <- renderPrint({
-  if ((is.null(input$file.article)) && (is.null(input$file.article.txt)) && (is.null(structured_data()))&&(is.null(input$file.tag))&&(is.null(input$file.rdf))) { return() }
+#  if ((is.null(input$file.article)) && (is.null(input$file.article.txt)) && (is.null(structured_data()))&&(is.null(input$file.tag))&&(is.null(input$file.rdf))) { return() }
   if((is.null(input$lda)) || (input$lda=="None")) { return() }
   LdaAnalysis()$docs
 })
 
 output$docsNames <- renderUI({
-  if ((is.null(input$file.article)) && (is.null(input$file.article.txt)) && (is.null(structured_data()))&&(is.null(input$file.tag))&&(is.null(input$file.rdf))) { return() }
+#  if ((is.null(input$file.article)) && (is.null(input$file.article.txt)) && (is.null(structured_data()))&&(is.null(input$file.tag))&&(is.null(input$file.rdf))) { return() }
   if((is.null(input$lda)) ||  (input$lda=="None")) { return() }
   if (!is.null(input$file.article.txt)) {
     k <- length(input$file.article.txt$name)
@@ -1354,7 +1495,7 @@ output$docsNames <- renderUI({
 })
 ########printCoordinates########
 output$printCoordinates <-renderPlot({
-  if ((is.null(input$file.article)) && (is.null(input$file.article.txt)) && (is.null(structured_data()))&&(is.null(input$file.tag))&&(is.null(input$file.rdf))) { return() }
+ # if ((is.null(input$file.article)) && (is.null(input$file.article.txt)) && (is.null(structured_data()))&&(is.null(input$file.tag))&&(is.null(input$file.rdf))) { return() }
   if((is.null(input$lda)) || (input$lda=="None")) { return() }
   
   distance <- LdaAnalysis()$lda.coordinates
@@ -1380,7 +1521,7 @@ output$best_topic_num <-renderUI({
 }) 
 ########stmAnalys############
 stmAnalysis <- reactive ({
-  if ((is.null(input$file.article)) && (is.null(input$file.article.txt)) && (is.null(structured_data()))&&(is.null(input$file.tag))&&(is.null(input$file.rdf))) { return() }
+#  if ((is.null(input$file.article)) && (is.null(input$file.article.txt)) && (is.null(structured_data()))&&(is.null(input$file.tag))&&(is.null(input$file.rdf))) { return() }
   novel.vector <- as.list(RemoveWordsStepTwo()$d$word)
   corpus <- Corpus(VectorSource(novel.vector))
   tdm <-DocumentTermMatrix(corpus)   
@@ -1396,7 +1537,7 @@ stmAnalysis <- reactive ({
 #### Print Documents for each topic
 #Example of documents associated with topics
 output$association <- renderPlot ({
-  if ((is.null(input$file.article)) && (is.null(input$file.article.txt)) && (is.null(structured_data()))&&(is.null(input$file.tag))&&(is.null(input$file.rdf))) { return() }
+ # if ((is.null(input$file.article)) && (is.null(input$file.article.txt)) && (is.null(structured_data()))&&(is.null(input$file.tag))&&(is.null(input$file.rdf))) { return() }
   if((is.null(input$stm)) || (input$stm=="None")) { return() }
   stmmodel<-  stmAnalysis()
   novel.vector <-RemoveWordsStepThree()$corpus#PreprocessingSteps()[6]#PreprocessingSteps()$lda.format#window.one()$lda.format
@@ -1413,7 +1554,7 @@ output$association <- renderPlot ({
 # Expected Topic Proportion
 #########proportion#########
 output$proportion <- renderPlot ({
-  if ((is.null(input$file.article)) && (is.null(input$file.article.txt)) && (is.null(structured_data()))&&(is.null(input$file.tag))&&(is.null(input$file.rdf))) { return() }
+ # if ((is.null(input$file.article)) && (is.null(input$file.article.txt)) && (is.null(structured_data()))&&(is.null(input$file.tag))&&(is.null(input$file.rdf))) { return() }
   if((is.null(input$stm))|| (input$stm=="None")) { return() }
   stmmodel<-  stmAnalysis()
   #par(mfrow=c(1,1),mar=c(5,5,5,5))
@@ -1422,7 +1563,7 @@ output$proportion <- renderPlot ({
 
 ########## perspective########
 output$perspectives <- renderPlot ({
-  if ((is.null(input$file.article)) && (is.null(input$file.article.txt)) && (is.null(structured_data()))&&(is.null(input$file.tag))&&(is.null(input$file.rdf))) { return() }
+#  if ((is.null(input$file.article)) && (is.null(input$file.article.txt)) && (is.null(structured_data()))&&(is.null(input$file.tag))&&(is.null(input$file.rdf))) { return() }
   if((is.null(input$stm))|| (input$stm=="None")) { return() }
   stmmodel<-  stmAnalysis()
   K=as.integer(input$num)
@@ -1431,7 +1572,7 @@ output$perspectives <- renderPlot ({
 })
 ##########cloud_stm########
 output$cloud_stm <- renderPlot({
-  if ((is.null(input$file.article)) && (is.null(input$file.article.txt)) && (is.null(structured_data()))&&(is.null(input$file.tag))&&(is.null(input$file.rdf))) { return() }
+ # if ((is.null(input$file.article)) && (is.null(input$file.article.txt)) && (is.null(structured_data()))&&(is.null(input$file.tag))&&(is.null(input$file.rdf))) { return() }
   if((is.null(input$stm))|| (input$stm=="None")) { return() }
   stmmodel<-  stmAnalysis()
   K=as.integer(input$num)
@@ -1441,7 +1582,7 @@ output$cloud_stm <- renderPlot({
 ### graphical display of topic correlation
 #########topic corelation#########
 output$corelation <-renderPlot({
-  if ((is.null(input$file.article)) && (is.null(input$file.article.txt)) && (is.null(structured_data()))&&(is.null(input$file.tag))&&(is.null(input$file.rdf))) { return() }
+ # if ((is.null(input$file.article)) && (is.null(input$file.article.txt)) && (is.null(structured_data()))&&(is.null(input$file.tag))&&(is.null(input$file.rdf))) { return() }
   if((is.null(input$stm)) || (input$stm=="None")) { return() }
   stmmodel<-  stmAnalysis()
   modoutcorr <- topicCorr(stmmodel)
@@ -1450,7 +1591,7 @@ output$corelation <-renderPlot({
 })
 
 output$topics_stm <- renderPrint({
-  if ((is.null(input$file.article)) && (is.null(input$file.article.txt)) && (is.null(structured_data()))&&(is.null(input$file.tag))&&(is.null(input$file.rdf))) { return() }
+  #if ((is.null(input$file.article)) && (is.null(input$file.article.txt)) && (is.null(structured_data()))&&(is.null(input$file.tag))&&(is.null(input$file.rdf))) { return() }
   if((is.null(input$stm)) || (input$stm=="None")) { return() }
   stmmodel<-  stmAnalysis()
   labelTopics(stmmodel)
@@ -1464,7 +1605,7 @@ output$topics_stm <- renderPrint({
 ######## CLUSTER ANALYSIS######
 
 cluster <-reactive ({
-  if ((is.null(input$file.article)) && (is.null(input$file.article.txt)) && (is.null(structured_data()))&&(is.null(input$file.tag))&&(is.null(input$file.rdf))) { return() }
+ # if ((is.null(input$file.article)) && (is.null(input$file.article.txt)) && (is.null(structured_data()))&&(is.null(input$file.tag))&&(is.null(input$file.rdf))) { return() }
   method=input$method
   distance = input$distance
   dtm <-ListTerms()$dtm
@@ -1476,7 +1617,7 @@ cluster <-reactive ({
 })
 
 output$cluster_plot <- renderPlot({
-  if ((is.null(input$file.article)) && (is.null(input$file.article.txt)) && (is.null(structured_data()))&&(is.null(input$file.tag))&&(is.null(input$file.rdf))) { return() }
+ # if ((is.null(input$file.article)) && (is.null(input$file.article.txt)) && (is.null(structured_data()))&&(is.null(input$file.tag))&&(is.null(input$file.rdf))) { return() }
   par(cex=1.2,mar=c(5, 4, 4, 2))
   color=input$color
   k=as.numeric(input$cuttree)
@@ -1485,26 +1626,26 @@ output$cluster_plot <- renderPlot({
   # if (!is.null(input$metadata_source)) {
   #   file.names <- fileData()$title
   # }
-  if (!is.null(input$file.article.txt)) {
-    file.names <- input$file.article.txt$name
+ # if (!is.null(input$file.article.txt)) {
+ #   file.names <- input$file.article.txt$name
+ #   file.names <- abbreviate(file.names, 10)
+ # }
+ # else if (!is.null(input$file.article)){
+  #  file.names <- input$file.article$name
+ #   file.names <- abbreviate(file.names, 10)
+ # }
+ # else if (!is.null(input$file.tag)){
+ #   file.names <- input$file.tag$name
+ #   file.names <- abbreviate(file.names, 10)
+ # }
+ # else if (!is.null(input$file.rdf)){
+    file.names <- extractZoteroTerm()$texts[[1]]#extractZoteroTerm()$titles
     file.names <- abbreviate(file.names, 10)
-  }
-  else if (!is.null(input$file.article)){
-    file.names <- input$file.article$name
-    file.names <- abbreviate(file.names, 10)
-  }
-  else if (!is.null(input$file.tag)){
-    file.names <- input$file.tag$name
-    file.names <- abbreviate(file.names, 10)
-  }
-  else if (!is.null(input$file.rdf)){
-    file.names <- zoteroData()$texts[[1]]#extractZoteroTerm()$titles
-    file.names <- abbreviate(file.names, 10)
-  }
-  else if (!is.null(structured_data())) {
-    file.names <- structured_data()$titles
-    file.names <- abbreviate(file.names, 10)
-  }
+ # }
+  #else if (!is.null(structured_data())) {
+  #  file.names <- structured_data()$titles
+  #  file.names <- abbreviate(file.names, 10)
+ # }
   # fit$labels <- file.names
   p<-  plot(fit)
   if (input$cuttree==0)
@@ -1599,14 +1740,14 @@ output$print_data = renderTable({
   
 })
 output$chronology_top2 <- renderPrint ({
-  if ((is.null(input$file.article)) && (is.null(input$file.article.txt)) && (is.null(structured_data()))&&(is.null(input$file.tag))&&(is.null(input$file.rdf))) { return() }
+  #if ((is.null(input$file.article)) && (is.null(input$file.article.txt)) && (is.null(structured_data()))&&(is.null(input$file.tag))&&(is.null(input$file.rdf))) { return() }
   # if((input$chronology=="None") || (is.null(input$chronology))) { return() }
   chronology()$term
 })
 #### NGRAM #####
 ngramFunction <- reactive({
-  if (is.null(input$file.rdf))  { return() }
-  extract <- extractZoteroTerm()
+ # if (is.null(input$file.rdf))  { return() }
+  extract <- RemoveWordsStepThree()$corpus#extractZoteroTerm()
   ngram <- ngramBuilder(extract)
   return(ngram)
 })

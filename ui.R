@@ -44,67 +44,6 @@ shinyUI(navbarPage(theme = "bootstrap.min.css",
                navlistPanel(
                  widths = c(2, 10),  
                  
-                 # tabPanel(strong("Text Files"),
-                 #          fluidPage(
-                 #            shiny::tags$head(shiny::tags$style(shiny::HTML(
-                 #              "#text { font-size: 15px; height: 300px; overflow: auto; }"
-                 #            ))),
-                 #            fluidRow( 
-                 #              column(5,
-                 #                     tags$h4("Format - txt"),
-                 #                     fileInput('file.article.txt', 'Choose File(s) in TEXT format',multiple=TRUE, accept=c('txt')),
-                 #                     uiOutput("print_name_article_txt"),
-                 #                     uiOutput("print_length_txt")
-                 #              ),
-                 #              column(5,
-                 #                     h4("Text Segmentation")
-                 #              )
-                 #            ),
-                 #            fluidRow(
-                 #              column(12,
-                 #                     tags$hr(),
-                 #                     div(id = "text", uiOutput("print_content_txt"))
-                 #              )
-                 #            )
-                 #          ) 
-                 # ),
-                 # tabPanel(strong("PDF Files"),
-                 #          fluidPage(
-                 #            shiny::tags$head(shiny::tags$style(shiny::HTML(
-                 #              "#text { font-size: 15px; height: 300px; overflow: auto; }"
-                 #            ))),
-                 #            fluidRow( 
-                 #              column(5,
-                 #                     tags$h4("Format - pdf"),
-                 #                     fileInput('file.article', 'Choose File(s) in PDF format',multiple=TRUE, accept=c('pdf')),
-                 #                     uiOutput("print_name_article"),
-                 #                     uiOutput("print_length_pdf")
-                 #              ),
-                 #              column(6,
-                 #                     tags$h4("Extract Abstracts"),
-                 #                     radioButtons(
-                 #                       'article_content', 
-                 #                       'Select Abstract',
-                 #                       c(none = 'Full Text',
-                 #                         abstract='Abstract'), 
-                 #                       'Full Text'
-                 #                     )
-                 #              )
-                 #            ),
-                 #            fluidRow(
-                 #              column(8,
-                 #                     tags$hr(),
-                 #                     tags$h5("Full Text Viewer"),
-                 #                     div(id = "text", uiOutput("print_content_pdf"))
-                 #              ),
-                 #              column(4,
-                 #                     tags$hr(),
-                 #                     tags$h5("Abstract Viewer"),
-                 #                     div(id = "text", uiOutput("print_abstract"))
-                 #              )
-                 #            )
-                 #          ) 
-                 # ),
                  #########Zotero########
                  tabPanel(strong("ZOTERO"), 
                           fluidPage(
@@ -113,37 +52,44 @@ shinyUI(navbarPage(theme = "bootstrap.min.css",
                             ))),
                             fluidRow( 
                               column(5,
-                                     fileInput('file.rdf', 'Choose File(s) in RDF format',multiple=FALSE, accept=c('txt','rdf')),
-                                     uiOutput("print_name_rdf"),
-                                     uiOutput("zotero_slider"),
-                                     uiOutput("choose_kwic_num"),
-                                    # uiOutput("print_content_rdf"),
-                                     tags$br()
+                                    # fileInput('file.rdf', 'Choose Corpus',multiple=FALSE, accept=c('txt','rdf')),
+                                    radioButtons(
+                                      'corpus', 
+                                      'Select Corpus',
+                                      c(english = 'English',
+                                      russian='Russian'), 
+                                      'English'
+                                      ),
+                                    tags$br(),
+                                    tags$br(),
+                                    radioButtons(
+                                      'category', 
+                                      'Select Category (under development)',
+                                      c(all = 'all',
+                                        articleExtract ='macro',
+                                        keyTermExtract='micro'
+                                        ), 
+                                      'micro'
+                                    ),
+                                    uiOutput("print_content_rdf")
+                                  #  
                                      
                               ),
                               column(6,
-                                     tags$h4("Extract Terms"),
-                                     helpText("Your query must include two query terms and AND / OR condition."),
-                                     tags$br(),
-                                     helpText("For example: ",tags$b("european AND law")),
-                                     tags$br(),
-                                      uiOutput("zotero_term")
-                                    # uiOutput("choose_kwic_num"),
+                                     tags$h6("Key Terms"),
+                                     helpText("Type two query terms separated by AND / OR condition."),
                                     # tags$br(),
-                                   # uiOutput("zotero_condition"),
-                                    #tags$br(),
-                                   # uiOutput("zotero_term2"),
-                                     #uiOutput("zotero_slider"),
-                                   #  tags$hr()
-                                    # textInput("pattern1", label = "term1", value = NA),
-                                     #  uiOutput("pattern2")
-                                   #  textInput("pattern2", label = "term2", value = NA)
+                                     helpText("For example: ",tags$b("cyber AND operation")),
+                                    uiOutput("zotero_slider"),
+                                    uiOutput("choose_kwic_num"),
+                                   # tags$br(),
+                                      uiOutput("zotero_term")
                               )
                             ),
                             fluidRow(
                               column(10,
                                      tags$hr(),
-                                     tags$h5("Zotero Text Viewer"),
+                                     tags$h5("Titles"),
                                      div(id = "text", uiOutput("print_zotero"))
                               )#,
    #                           column(5,
@@ -191,7 +137,7 @@ shinyUI(navbarPage(theme = "bootstrap.min.css",
                               column(4,
                                      tags$h4("Select Preprocessing Steps"),
                                      tags$hr(),
-                                     checkboxInput('remove_punctuation', 'Remove Punctuation', FALSE),
+                                     checkboxInput('remove_punctuation', 'Remove Punctuation', TRUE),
                                      radioButtons(
                                        'exceptions', 
                                        'Exceptions (keep hyphen or apostrophe)',
@@ -199,18 +145,18 @@ shinyUI(navbarPage(theme = "bootstrap.min.css",
                                          both='Keep apostrophe and hyphen', 
                                          hyphen='Keep hyphen', 
                                          apostrophe='Keep apostrophe'), 
-                                       'No exceptions'
+                                       'Keep apostrophe and hyphen'
                                      ),
                                      tags$hr(),
-                                     checkboxInput('lower_case', 'Lower Case', FALSE),
+                                     checkboxInput('lower_case', 'Lower Case', TRUE),
                                      tags$hr(),
-                                     checkboxInput('remove_numbers','Remove Numbers',FALSE),
+                                     checkboxInput('remove_numbers','Remove Numbers',TRUE),
                                      tags$hr(),
-                                     checkboxInput('remove_references','Remove References',FALSE),
+                                     checkboxInput('remove_references','Remove References',TRUE),
                                      tags$hr(),
-                                     checkboxInput('remove_urls','Remove Urls',FALSE),
+                                     checkboxInput('remove_urls','Remove Urls',TRUE),
                                      tags$hr(),
-                                     checkboxInput('remove_html','Remove HTML',FALSE)
+                                     checkboxInput('remove_html','Remove HTML',TRUE)
                               ),
                               column(6,
                                      tags$h4("Preprocessing Viewer"),
@@ -379,8 +325,8 @@ shinyUI(navbarPage(theme = "bootstrap.min.css",
                              tabPanel("Unigram",
                                       fluidPage(
                                         fluidRow(
-                                          column(12, 
-                                                 tags$h4("Frequency Table - Unigram"),
+                                          column(6, 
+                                                 tags$h4("Frequency Table"),
                                                  tags$hr(),
                                                  # checkboxInput('show_freq','Frequency',FALSE),
                                                  dataTableOutput("freq_unigram")
@@ -391,8 +337,8 @@ shinyUI(navbarPage(theme = "bootstrap.min.css",
                              tabPanel("Bigram",
                                       fluidPage(
                                         fluidRow(
-                                          column(12, 
-                                                 tags$h4("Frequency Table - Bigram"),
+                                          column(6, 
+                                                 tags$h4("Frequency Table"),
                                                  tags$hr(),
                                                  # checkboxInput('show_freq','Frequency',FALSE),
                                                  dataTableOutput("freq_bigram")
@@ -400,6 +346,8 @@ shinyUI(navbarPage(theme = "bootstrap.min.css",
                                         )
                                       )
                              ),
+                             
+                         
 
                              tabPanel("Ngram Visualization",
                                       p("Ngram analysis",

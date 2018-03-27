@@ -9,7 +9,8 @@
 
 #zoteropdf[[5]][1]
 #zot_data <- zoteropdf#[[5]]
-#length(zot_data)
+
+#length(zoteropdf)
 #k=3
 # query="europ"
 # query1="cyberspace"
@@ -26,6 +27,10 @@
 # mydata <- extractZotero(dir.list,query,query2,len, path_to_rdf)
 # mydata$titles
 #extract <- mydata
+#save(zoteropdf, file="zoteropdf.rda")
+
+#load("zoteropdf.rda")
+#zot_data <- zoteropdf
 # mydata <- extractZoteroTxt(zot_data,query1,query2,condition, len, between)
 #length(mydata[[2]])
 zotero_rdf <- function(x) {
@@ -49,7 +54,7 @@ zotero_rdf <- function(x) {
   
   print(length(nodes))
   print(length(attachments))
-i=4
+#i=4
   for (i in 1:length(nodes)) {
   #  print("NEW")
     node <- nodes[[i]]
@@ -150,7 +155,7 @@ extractPdfZotero <- function(zot.rdf) {
  # num <- length(list.rdf)
  # zot.rdf <- zot.pdf
   removeURL <- function(x) gsub("http[^[:space:]]*", "", x)
- # removeWWW <- function(x) gsub("www[^[:space:]]*", "", x)
+  removeWWW <- function(x) gsub("www[^[:space:]]*", "", x)
   require(tm)
   substrRight <- function(x, n){
     substr(x, nchar(x)-n+1, nchar(x))
@@ -185,6 +190,7 @@ authors <-vector()
     texts <- enc2utf8(read.file)
     text.collapse <- paste(texts,collapse=" ")
     text.url <- removeURL(text.collapse)
+    text.url <- removeWWW(text.url)
     text.hyphen <- gsub("-\\s+","",text.url)
     text.space <- gsub("\\s\\s+"," ",text.hyphen)
   #  split_title <- unlist(strsplit(id," - "))
@@ -251,6 +257,112 @@ authors <-vector()
   return(info)
 }
 
+
+extractAllPdfZotero <- function(zot.rdf) {
+  # list.rdf <- list.rdf
+  # num <- length(list.rdf)
+  # zot.rdf <- zot.pdf
+  removeURL <- function(x) gsub("http[^[:space:]]*", "", x)
+  # removeWWW <- function(x) gsub("www[^[:space:]]*", "", x)
+  require(tm)
+  substrRight <- function(x, n){
+    substr(x, nchar(x)-n+1, nchar(x))
+  }
+  num <- length(zot.rdf) # list of rdf articles with sublist of 5 title, abstract,date,surname, firstname,link,type,path
+  titles <-vector()
+  authors <-vector()
+  datetimes <- vector()
+  abstracts <- vector()
+  names <- vector()
+  # cont <- rep("",num)
+  text.extract <- list()
+  # pdf.str <- ".pdf" 
+  for (i in 1:num) {
+    lists <- zot.rdf[[i]]
+    # uris.name <- as.character(paste0(list.rdf[i]))
+    uris.name <- lists[8]
+    # print(uris.name)
+    # uris.name <- zotero.rdf[5]
+    # if (uris.name %in% ".pdf") {
+    
+    #  if (substrRight(uris.name,3)=="pdf") {
+    # uris.name <- "/Users/olgascrivner/Documents/ITMS/TextMiningZotero/HCSS-Rizzoma/files/3422/Adamsky_2018_From Moscow with coercion.pdf"
+    # if (nchar(uris.name)<100) {
+    #  print(substrRight(uris.name,3))
+    tempPDF <- readPDF(control = list(info="-f",text = "-layout"))(elem = list(uri = uris.name),
+                                                                   language="en",id="id1")
+    read.file <- tempPDF$content
+    #  print(read.file)
+    #  id <- tempPDF$meta$id
+    #  title <- tempPDF$meta$id
+    texts <- enc2utf8(read.file)
+    text.collapse <- paste(texts,collapse=" ")
+    text.url <- removeURL(text.collapse)
+    text.hyphen <- gsub("-\\s+","",text.url)
+    text.space <- gsub("\\s\\s+"," ",text.hyphen)
+    #  split_title <- unlist(strsplit(id," - "))
+    # if (!is.null(tempPDF$meta$datetimestamp)) {
+    # title <- tempPDF$meta$heading
+    # author <- tempPDF$meta$author # Alan Ritter ; Colin Cherry ; Bill Dolan
+    #id <-tempPDF$meta$id
+    #  des <- tempPDF$meta$datetimestamp
+    #   y <- strsplit(as.character(des), "-")
+    #   datetime <- y[[1]][1]
+    # name <- tempPDF$meta$id
+    #  }
+    #  if (!is.null(tempPDF$meta$author)) {
+    #  title <- tempPDF$meta$id
+    # name <- tempPDF$meta$id
+    #    author <- tempPDF$meta$author
+    #  }
+    # des <- tempPDF$meta$datetimestamp
+    #  y <- strsplit(as.character(des), "-")
+    #  datetime <- des#y[[1]][1]
+    #  }
+    #   if (is.null(tempPDF$meta$datetimestamp)) {
+    #     datetime <- split_title[2]#strsplit(id," - ")[[1]]
+    #   zoteroData()$texts[[1]]
+    #  title <- "NA"
+    #  }
+    #  if (is.null(tempPDF$meta$author)) {
+    #    author <- split_title[1] #strsplit(id," - ")[[1]]
+    #   author <- "NA"
+    #  }
+    #  if (length(datetime)<1) {
+    #    datetime <- strsplit(id," - ")[[2]]
+    #  }
+    # if (length(name)<1) {
+    #   name <-x$name[i]
+    # }
+    title <- lists[1]
+    n <- length(strsplit(lists[3], " ")[[1]])
+    if (n==1) {
+      datetime <- lists[3]
+    }
+    else if (n>1) {
+      datetime <- strsplit(lists[3], " ")[[1]][n]
+    } 
+    else {
+      datetime <- ""# tempPDF$meta$datetimestamp
+    }    
+    abstract <- lists[2]
+    name <- paste0(lists[5]," ",lists[4])
+    titles[i] <- title
+    authors[i] <- name
+    datetimes[i] <- datetime
+    names[i] <- name
+    abstracts[i] <- abstract
+    text.extract[[i]] <- text.space
+    # text.extract <- unlist(text.extract)
+    # }
+    #   else {print("none")}
+    #  print("extractpdfzotero")
+    #  print(i)
+    #  }
+  }
+  info <- list(titles=titles, abstracts=abstracts, authors=authors,datetimes=datetimes, text.extract=text.extract) 
+  return(info)
+}
 
 #extract <- extractZotero(uris.name,query,query2,len, x)
 #extract

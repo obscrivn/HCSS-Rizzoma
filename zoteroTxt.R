@@ -6,7 +6,7 @@ extractZoteroTxt <- function(zot_data,query1,query2,condition, len, between){
  # zot_data <- 
   #zot_data <- text.extract
   num <- length(zot_data[[5]])
- # print(num)
+  print(num)
  # num <- length(zot_data[[5]])
   query1 = query1
  # print(query1)
@@ -79,7 +79,7 @@ extractZoteroTxt <- function(zot_data,query1,query2,condition, len, between){
           #     strings <- lda.list[(loc1[k]):(loc1[k]+between)]
           #   }
              if (query2 %in% strings) {
-              # print("TRUE")
+             #  print("TRUE")
                z=z+1
                ### add left and right context
                if ((loc1[k]-between-len)<1 ){
@@ -113,7 +113,7 @@ extractZoteroTxt <- function(zot_data,query1,query2,condition, len, between){
          # w=w+1
              }
              else {
-             # print("FALSE") 
+           #   print("FALSE") 
                lines.merge = NULL}
              
            }

@@ -17,7 +17,7 @@
 #   path[[n]] <- p
 #   n=n+1
 # }
-#zotero.rdf < zotero_rdf(x)
+#zotero.rdf <- zotero_rdf(x)
 # query="europ"
  query1="cyberspace"
 query2="operations"
