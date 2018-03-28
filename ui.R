@@ -65,8 +65,8 @@ shinyUI(navbarPage(theme = "bootstrap.min.css",
                                     radioButtons(
                                       'category', 
                                       'Select Category (under development)',
-                                      c(all = 'all',
-                                        articleExtract ='macro',
+                                      c(All = 'all',
+                                        Abstract ='abstract',
                                         keyTermExtract='micro'
                                         ), 
                                       'micro'
@@ -145,7 +145,7 @@ shinyUI(navbarPage(theme = "bootstrap.min.css",
                                          both='Keep apostrophe and hyphen', 
                                          hyphen='Keep hyphen', 
                                          apostrophe='Keep apostrophe'), 
-                                       'Keep apostrophe and hyphen'
+                                       'No exceptions'
                                      ),
                                      tags$hr(),
                                      checkboxInput('lower_case', 'Lower Case', TRUE),
@@ -301,7 +301,7 @@ shinyUI(navbarPage(theme = "bootstrap.min.css",
                               ),
                               
                                      column(5,
-                                            dataTableOutput("place_for_metadata_table")
+                                            DT::dataTableOutput("place_for_metadata_table")
                                      #       tags$hr(),
                                         #    dataTableOutput("zotero_metadata_table")
                                      )
@@ -329,7 +329,7 @@ shinyUI(navbarPage(theme = "bootstrap.min.css",
                                                  tags$h4("Frequency Table"),
                                                  tags$hr(),
                                                  # checkboxInput('show_freq','Frequency',FALSE),
-                                                 dataTableOutput("freq_unigram")
+                                                 DT::dataTableOutput("freq_unigram")
                                           )
                                         )
                                       )
@@ -341,7 +341,7 @@ shinyUI(navbarPage(theme = "bootstrap.min.css",
                                                  tags$h4("Frequency Table"),
                                                  tags$hr(),
                                                  # checkboxInput('show_freq','Frequency',FALSE),
-                                                 dataTableOutput("freq_bigram")
+                                                 DT::dataTableOutput("freq_bigram")
                                           )
                                         )
                                       )

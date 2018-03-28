@@ -1,7 +1,14 @@
-
+# x <- extractZoteroTerm()[[2]]
+#x <- mydata[[2]]
+require(stringi)
+require(stringr)
+#clusters <- listTerms(x)
+#class(clusters)
+#length(clusters)
+# d$frequency d$word, corpus.lda, d.clean
 listTerms <- function(x) {
 # x <- text.extract 
-z<-paste(x,collapse=" ")
+x<-paste(x,collapse=" ")
   
   text.punct <- gsub("[^[:alnum:] ]", "", z)
   data <- gsub("[0-9]+","", text.punct)

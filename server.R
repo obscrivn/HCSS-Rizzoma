@@ -303,8 +303,6 @@ extractZoteroTerm <- reactive ({
   return(extract) # list of 5 text.extract, titles, datetimes,authors, abstracts
 })
 
-### collection ####
-
 
 ########print_content_rdf ######
 output$print_content_rdf <- renderUI({
@@ -372,8 +370,11 @@ ListTerms <- reactive({
  # else if (!is.null(structured_data()))  {
   #  corpus.lda <- structured_data()$corpus
  # }
-  listTerms(corpus.lda)
-})  
+ clusters <- listTerms(corpus.lda)
+ info <- list(d = clusters$d, corpus.lda = clusters$corpus.lda, 
+              len = clusters$len, clean = clusters$d.clean)
+return(info)
+ })  
 
 output$term_print <- renderUI ({
  # if ((is.null(input$file.article)) && (is.null(input$file.article.txt)) && (is.null(structured_data()))&&(is.null(input$file.rdf)) && (is.null(input$file.tag))) { return() }
@@ -469,7 +470,7 @@ output$zotero_metadata_table <- renderDataTable({
  # t <- zoteroData()$titles
  # dt <- zoteroData()$datetimes
   my_data <- data.frame(date=dt, title=t, author = a)
-  return(my_data)
+my_data
 })
 ### Display Metadata from CSV
 output$place_for_metadata_table <- renderDataTable({
@@ -571,9 +572,9 @@ PreprocessingSteps <- reactive({
  # print(length(x))
  # y <- extractZoteroTerm()#$titles#[[3]]
   }
-  else if (input$category=='macro'){
-    x <- zoteroData()[[5]]
-    print(length(x))
+  else if (input$category=='abstract'){
+    x <- unlist(zoteroData()[[2]])
+   # print(length(x))
     
   }
  # print(length(y))
@@ -762,6 +763,7 @@ RemoveWordsStepOne <- reactive({
     corpus.paste <-paste(corpus, sep=" ")
     corpus.paste <- str_c(corpus.paste)
     corpus.paste<- str_trim(corpus.paste)
+    corpus.paste <- gsub("[^[:alnum:] ]", "", corpus.paste) 
     corpus.list <- strsplit(corpus.paste, "\\s+")
     terms <- table(unlist(corpus.list))
     terms.sorted <- sort(terms, decreasing = TRUE)
@@ -830,9 +832,10 @@ RemoveWordsStepTwo <-reactive({
       corpus[[i]] <- doc
     }
     # corpus <-unlist(corpus)
-    corpus.paste <-paste(corpus, sep=" ")
+    corpus.paste <- paste(corpus, sep=" ")
     corpus.paste <- str_c(corpus.paste)
-    corpus.paste<- str_trim(corpus.paste)
+    corpus.paste <- str_trim(corpus.paste)
+    corpus.paste <- gsub("[^[:alnum:] ]", " ", corpus.paste) 
     corpus.list <- strsplit(corpus.paste, "\\s+")
     terms <- table(unlist(corpus.list))
     terms.sorted <- sort(terms, decreasing = TRUE)
@@ -885,7 +888,7 @@ RemoveWordsStepTwo <-reactive({
   d$word <- row.names(d)
   agg_freq <- aggregate(frequency ~ word, data = d, sum)
   d <- d[order(d$frequency, decreasing = T), ]
-  info <- list(d=d,corpus=corpus,tdm=tdm,term.matrix=term.matrix,dtm=dtm)
+  info <- list(d=d,corpus=corpus,tdm=tdm,terms.matrix=terms.matrix,dtm=dtm)
   return(info)
 })
 
@@ -1608,8 +1611,13 @@ cluster <-reactive ({
  # if ((is.null(input$file.article)) && (is.null(input$file.article.txt)) && (is.null(structured_data()))&&(is.null(input$file.tag))&&(is.null(input$file.rdf))) { return() }
   method=input$method
   distance = input$distance
-  dtm <-ListTerms()$dtm
-  m <- as.matrix(dtm)
+  corpus <- stemming()
+  doc.vect <- VectorSource(corpus)
+  docs <-Corpus(doc.vect)
+  tdm <- TermDocumentMatrix(docs)
+ # dtm <-RemoveWordsStepThree()$dtm#ListTerms()$dtm
+ # m <- as.matrix(dtm)
+  m <- as.matrix(tdm)
   d<-dist(m,distance)
   fit <-hclust(d,method)
   
@@ -1639,7 +1647,7 @@ output$cluster_plot <- renderPlot({
  #   file.names <- abbreviate(file.names, 10)
  # }
  # else if (!is.null(input$file.rdf)){
-    file.names <- extractZoteroTerm()$texts[[1]]#extractZoteroTerm()$titles
+    file.names <- extractZoteroTerm()[[1]]#extractZoteroTerm()$titles
     file.names <- abbreviate(file.names, 10)
  # }
   #else if (!is.null(structured_data())) {
@@ -1741,7 +1749,7 @@ output$print_data = renderTable({
 })
 output$chronology_top2 <- renderPrint ({
   #if ((is.null(input$file.article)) && (is.null(input$file.article.txt)) && (is.null(structured_data()))&&(is.null(input$file.tag))&&(is.null(input$file.rdf))) { return() }
-  # if((input$chronology=="None") || (is.null(input$chronology))) { return() }
+   if((input$chronology=="None") || (is.null(input$chronology))) { return() }
   chronology()$term
 })
 #### NGRAM #####
