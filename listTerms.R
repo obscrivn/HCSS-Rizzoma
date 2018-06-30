@@ -1,7 +1,7 @@
 # x <- extractZoteroTerm()[[2]]
 #x <- mydata[[2]]
-require(stringi)
-require(stringr)
+#require(stringi)
+#require(stringr)
 #clusters <- listTerms(x)
 #class(clusters)
 #length(clusters)

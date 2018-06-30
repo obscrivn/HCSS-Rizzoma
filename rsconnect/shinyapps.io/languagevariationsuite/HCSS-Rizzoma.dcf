@@ -3,9 +3,9 @@ title: HCSS-Rizzoma
 account: languagevariationsuite
 server: shinyapps.io
 appId: 251716
-bundleId: 1290951
+bundleId: 1458373
 url: https://languagevariationsuite.shinyapps.io/HCSS-Rizzoma/
-when: 1522184944.83588
+when: 1530380280.52159
 asMultiple: FALSE
 asStatic: FALSE
-ignoredFiles: English - first spiral corpus-articles.rdf|English - first spiral corpus.rdf|EuropeanInfluencetest.rdf|EuropeanInfluencetest4.rdf|Russian - first spiral corpus.rdf|zotero copy.R
+ignoredFiles: abstract.R|English - first spiral corpus-articles.rdf|English - first spiral corpus.rdf|EuropeanInfluencetest.rdf|EuropeanInfluencetest4.rdf|extractContent.R|extractContentTxt.R|extractMetadata.R|gender.pdf|kwics.R|metadata.csv|multiplot.R|myImagePlot.R|MyPlot.R|parseJSON.R|parseMODS.R|preprocess.R|README.md|RotateCoordinatesByOrderedValues.R|Russian - first spiral corpus.rdf|russianpdf.rda|test_curl.R|test-hcss-zotero.R|Workbook1.txt|zotero copy.R

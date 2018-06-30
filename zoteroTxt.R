@@ -1,12 +1,13 @@
+
 extractZoteroTxt <- function(zot_data,query1,query2,condition, len, between){
    # num <- length(x$name)
-  require(tm)
-  require(qdapRegex)
-  #zot_data <- unlist(zot_data)
- # zot_data <- 
+  #require(tm)
+ # require(qdapRegex)
+ # zot_data <- unlist(zot_data)
+  zot_data <- zot_data
   #zot_data <- text.extract
-  num <- length(zot_data[[5]])
-  print(num)
+  num <- length(zot_data$titles)
+  #print(num)
  # num <- length(zot_data[[5]])
   query1 = query1
  # print(query1)
@@ -37,26 +38,11 @@ extractZoteroTxt <- function(zot_data,query1,query2,condition, len, between){
     for (i in 1:num) {
      # lines.merge=NA
      # content <- zot_data[[i]]
-      content <- zot_data[[5]][i]
-      #content <- zot_data_texts[i]
-    #  content <- zot_data[i]
-     # print(content)
-      corpus.collapse <- paste(content,collapse=" ")
-      text.punct <- gsub('[[:digit:]]+', '', corpus.collapse)
-      text.punct <- tolower(text.punct)
-      text.punct <-rm_citation(text.punct)
-      text.punct <-rm_citation(text.punct, pattern="@rm_citation3")
-      text.punct <-rm_citation(text.punct, pattern="@rm_citation2")
-      text.punct <-rm_round(text.punct)
-      text.punct <-rm_curly(text.punct)
-      text.punct <-rm_square(text.punct)
-      text.split<-unlist(strsplit(text.punct, "References|references|REFERENCES"))
-      #text.split <- unlist(text.p)
-      text.punct <- text.split[1]
-      text.punct <- gsub("[^[:alnum:] ]", "", text.punct)
-      text.punct <- gsub("\\s\\s+"," ",text.punct)
+      content <- zot_data$preprocessingSteps$lda.format[[i]]
+      #corpus.collapse <- paste(content,collapse=" ")
+     
       # lda.list <- unlist(strsplit(corpus.collapse[[i]], "\\s+"))
-      lda.list <- unlist(strsplit(text.punct, "\\s+"))
+      lda.list <- unlist(strsplit(content, " "))
       # remove punctuation
      # if (condition %in% "and") {
         loc1 <- grep(query1, lda.list,perl=TRUE)
@@ -160,14 +146,14 @@ extractZoteroTxt <- function(zot_data,query1,query2,condition, len, between){
           title <- zot_data[[1]][i]
           datetime <- zot_data[[4]][i]
           abstract <- zot_data[[2]][i]
-          name <- zot_data[[3]][i]
+          name <- zot_data$text.extract[[1]][i]
       text.extract[[w]] <- lines.merge
       titles[w] <- title
       authors[w] <- name
       datetimes[w] <- datetime
       abstracts[w] <- abstract
       contents[w] <- content
-      print(w)    
+      #print(w)    
       w=w+1
   # print(lines.merge)
 

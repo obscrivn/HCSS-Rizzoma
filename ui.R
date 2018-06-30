@@ -10,33 +10,15 @@
 library(shiny)
 library(streamgraph)
 shinyUI(navbarPage(theme = "bootstrap.min.css",
-                   tags$title("Interactive Text Mining Suite: HCSS"),
+                   tags$title("ITMS: RuBase"),
                    navbarPage(
                      
                      title = div(
                        img(src="itmslogo.jpg", class="app-logo", height = 40),
-                       div(class="app-title", tags$h5(strong("Interactive Text Mining Suite ITMS")))
+                       div(class="app-title", tags$h5(strong("ITMS: RuBase Corpus")))
                      ),
                      position="fixed-top",
-  #  headerPanel("Interactive Text Mining Suite ITMS"),
-
-  #  img(src = "itmslogo.jpg", height = 60, width = 72),
-  #  inverse=TRUE, # dark with light text
-  #  collapsible=FALSE,
-  #  tags$head(
- #   tags$style(HTML("
-    #  .caret {
-    #    display: inline-block;
-    #                width: 0;
-    #                height: 0;
-    #                margin-left: 2px;
-    #                vertical-align: middle;
-    #                border-top: 9px solid #fff;
-   #                 border-right: 7px solid transparent;
-   #                 border-bottom: 0px solid;
-   #                 border-left: 7px solid transparent;
-   #                 };
-   #   .nav-tabs {font-size: 20px} "))),
+ 
 ####### File Processing #######
 
     tabPanel(strong("File Processing"),
@@ -56,21 +38,13 @@ shinyUI(navbarPage(theme = "bootstrap.min.css",
                                     radioButtons(
                                       'corpus', 
                                       'Select Corpus',
-                                      c(english = 'English',
-                                      russian='Russian'), 
-                                      'English'
+                                      c(english = 'english',
+                                      russian='russian'), 
+                                      'russian'
                                       ),
                                     tags$br(),
                                     tags$br(),
-                                    radioButtons(
-                                      'category', 
-                                      'Select Category (under development)',
-                                      c(All = 'all',
-                                        Abstract ='abstract',
-                                        keyTermExtract='micro'
-                                        ), 
-                                      'micro'
-                                    ),
+                                   
                                     uiOutput("print_content_rdf")
                                   #  
                                      
@@ -79,7 +53,7 @@ shinyUI(navbarPage(theme = "bootstrap.min.css",
                                      tags$h6("Key Terms"),
                                      helpText("Type two query terms separated by AND / OR condition."),
                                     # tags$br(),
-                                     helpText("For example: ",tags$b("cyber AND operation")),
+                                     helpText("For example: ",tags$b("Влияние AND война")),
                                     uiOutput("zotero_slider"),
                                     uiOutput("choose_kwic_num"),
                                    # tags$br(),
@@ -92,87 +66,11 @@ shinyUI(navbarPage(theme = "bootstrap.min.css",
                                      tags$h5("Titles"),
                                      div(id = "text", uiOutput("print_zotero"))
                               )#,
-   #                           column(5,
-   #                                  tags$hr(),
-    #                                 dataTableOutput("zotero_metadata_table")
-    #                                 )
                             )
                           )
                  ),
-                 # tabPanel(strong("Structured Data"),
-                 #          fluidPage(
-                 #            fluidRow( 
-                 #              column(6, 
-                 #                     #tags$hr(),
-                 #                     radioButtons('structured_data_file_source', 'Choose file format',
-                 #                                  c("XML"="XML",
-                 #                                    "JSON"="JSON",
-                 #                                    "Google Books Search" = "GoogleAPI"
-                 #                                  ),
-                 #                                  "GoogleAPI"),
-                 #                     uiOutput("place_for_structured_data_browser")
-                 #              ),
-                 #              column(6, 
-                 #                     dataTableOutput("place_for_structured_data")
-                 #              )
-                 #            )
-                 #          )
-                 # )
                 
-     #     )
-    #   )
-   # ), 
-   # tabPanel(strong("Data Preparation"),
-           #  fluidPage(
-             #  navlistPanel(
-               #  widths = c(2, 10),
    ############Data Cleaning#######
-                 tabPanel("Data Cleaning", 
-                          
-                          fluidPage(
-                            shiny::tags$head(shiny::tags$style(shiny::HTML(
-                              "#text { font-size: 15px; height: 300px; overflow: auto; }"
-                            ))),
-                            fluidRow( 
-                              column(4,
-                                     tags$h4("Select Preprocessing Steps"),
-                                     tags$hr(),
-                                     checkboxInput('remove_punctuation', 'Remove Punctuation', TRUE),
-                                     radioButtons(
-                                       'exceptions', 
-                                       'Exceptions (keep hyphen or apostrophe)',
-                                       c(none = 'No exceptions',
-                                         both='Keep apostrophe and hyphen', 
-                                         hyphen='Keep hyphen', 
-                                         apostrophe='Keep apostrophe'), 
-                                       'No exceptions'
-                                     ),
-                                     tags$hr(),
-                                     checkboxInput('lower_case', 'Lower Case', TRUE),
-                                     tags$hr(),
-                                     checkboxInput('remove_numbers','Remove Numbers',TRUE),
-                                     tags$hr(),
-                                     checkboxInput('remove_references','Remove References',TRUE),
-                                     tags$hr(),
-                                     checkboxInput('remove_urls','Remove Urls',TRUE),
-                                     tags$hr(),
-                                     checkboxInput('remove_html','Remove HTML',TRUE)
-                              ),
-                              column(6,
-                                     tags$h4("Preprocessing Viewer"),
-                                     tags$hr(),
-                                     radioButtons(
-                                       'preprocessing', 
-                                       'Apply Steps or Default (no preprocessing) ',
-                                       c(apply='Apply Steps',default='No Changes'), 
-                                       'No Changes'
-                                     ),
-                                     div(id = "text", uiOutput("print_preprocessed"))
-                              )
-                            )
-                          )
-                          
-                 ),
                  tabPanel("Stopwords",
                           
                           fluidPage(
@@ -182,10 +80,11 @@ shinyUI(navbarPage(theme = "bootstrap.min.css",
                                      radioButtons('stops', 
                                                   'Select Default or Upload',
                                                   c(None="None",
-                                                    Default='Default',
+                                                    english='english',
+                                                    russian='russian',
                                                     Upload='Upload'),
-                                                  'None'),
-                                     helpText("Default is the list from tm package: stopwords(`SMART')"),
+                                                  'russian'),
+                                     helpText("Default is the list from tm package: stopwords(`SMART') and ('russian')"),
                                      tags$hr(),
                                      fileInput('stopwords.txt', 'Upload stopwords - txt format (one word per line)',multiple=FALSE,
                                                accept=c('txt')),
@@ -260,15 +159,7 @@ shinyUI(navbarPage(theme = "bootstrap.min.css",
                                                   ), 'none'),
                                      tags$hr()
                               ),
-                              column(6, 
-                                     tags$h4("Manual Stems"),
-                                     tags$hr(),
-                                     "Under development"
-                                     # p("Add manually additional stems:")
-                              )
-                            ),
-                            fluidRow(
-                              column(12, tags$h4("Stem Viewer"),
+                              column(8, tags$h4("Stem Viewer"),
                                      tags$hr(),
                                      div(id = "text", uiOutput("print_stemmer"))
                               )
@@ -280,39 +171,22 @@ shinyUI(navbarPage(theme = "bootstrap.min.css",
                  tabPanel("Metadata",
                           
                           p(
-                            "Metadata consists of Ids, Year, Title, Author, Category, Location. 
-                            You can upload your metadata in csv format (see a template). 
-                            If your pdf files contain matadata - it will be printed here."
+                            "Metadata consists of Ids, Year, Title, 
+Author, Category, Location. 
+If your rdf files contain metadata - it will be printed here."
                           ),
-                          
                           fluidPage(
                             fluidRow( 
-                              column(4, 
+                              column(10, 
                                      tags$hr(),
-                                     radioButtons('metadata_source', 'Choose metadata source',
-                                                  c("None" = "None",
-                                                    #"From metadata of each uploaded PDF"="PDF",
-                                                    "From separate CSV file"="CSV",
-                                                  #  "From separate JSON file"="JSON",
-                                                   # "From separate XML file"="XML",
-                                                    "From zotero files metadata"="ZOTERO"),
-                                                  "ZOTERO"),
-                                     uiOutput("place_for_file_browser")                                                              
-                              ),
-                              
-                                     column(5,
-                                            DT::dataTableOutput("place_for_metadata_table")
-                                     #       tags$hr(),
-                                        #    dataTableOutput("zotero_metadata_table")
+                                     DT::dataTableOutput("zotero_metadata_table")
                                      )
                                     # dataTableOutput("place_for_metadata_table")
                               )
                             )
                           )
-                          
-                          )
                  )
-            # )
+             )
     ),    
     
     #navbarMenu(title = "Data Visualization",
@@ -360,7 +234,8 @@ shinyUI(navbarPage(theme = "bootstrap.min.css",
                                           fluidRow(
                                             column(12,
                                                    tags$h4("Ngram By Title"),
-                                                   plotOutput("ngram2"))
+                                                   p("under development"))
+                                                #   plotOutput("ngram2"))
                                           )
                                         )
                                       )
@@ -418,7 +293,7 @@ shinyUI(navbarPage(theme = "bootstrap.min.css",
                                          fluidRow(
                                            column(12, 
                                                   
-                                                  plotOutput("print_cloud")
+                                                  wordcloud2Output("print_cloud", width = "100%", height = "400px")
                                            )
                                          ),
                                          # plotOutput("word_count")),
@@ -591,25 +466,25 @@ shinyUI(navbarPage(theme = "bootstrap.min.css",
                  )
                  ),
                  
-                 tabPanel("Stream Graph2",
-                          fluidPage(
-                            fluidRow(
-                              column(12,  tags$h4("Stream Graph - Movies"),
-                                     streamgraphOutput("movies")
-                              )
-                            )
-                          )
-                 ),
-                tabPanel("Stream Graph3",
-                         fluidPage(
-                           fluidRow(
-                             column(12,  tags$h4("Stream Graph - Stocks Set"),
-                                    streamgraphOutput("stocks")
-                             )
-                           )
-                         )
-                         # )
-                ),
+                 # tabPanel("Stream Graph2",
+                 #          fluidPage(
+                 #            fluidRow(
+                 #              column(12,  tags$h4("Stream Graph - Movies"),
+                 #                     streamgraphOutput("movies")
+                 #              )
+                 #            )
+                 #          )
+                 # ),
+                # tabPanel("Stream Graph3",
+                #          fluidPage(
+                #            fluidRow(
+                #              column(12,  tags$h4("Stream Graph - Stocks Set"),
+                #                     streamgraphOutput("stocks")
+                #              )
+                #            )
+                #          )
+                #          # )
+                # ),
                  tabPanel("STM Visualization",
   
                           fluidPage(

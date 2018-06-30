@@ -1,10 +1,10 @@
-ngramBuilder <- function(extract) {
-require(dplyr)
-require(tidytext)
+ngramBuilder <- function(title, text) {
+#require(dplyr)
+#require(tidytext)
 #require(janeaustenr)
-require(tidyverse)
-
-d <- data_frame(title = extract[[3]], txt = extract[[2]])
+#require(tidyverse)
+  d <- data_frame(title = title, txt = text)
+#d <- data_frame(title = extract[[3]], txt = extract[[2]])
 
 d %>%
   unnest_tokens(word, txt)
